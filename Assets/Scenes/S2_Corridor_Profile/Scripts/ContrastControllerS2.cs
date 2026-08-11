@@ -3,10 +3,11 @@ using UnityEngine;
 
 namespace VISimulation
 {
-    public class ContrastControllerS2 : MonoBehaviour
+    public class ContrastControllerS2 : MonoBehaviour, ISimulationController
     {
         [Header("Scene 2 Lighting Control")]
         [Range(0, 1000)] public float emLux = 300f; // Global Illuminance target
+        public float intensityFactor = 0.03f; // Factor to convert Lux to Unity Intensity
         
         [Header("Target Lights (Optional)")]
         public Transform lightParent; // Parent object containing lights
@@ -38,26 +39,31 @@ namespace VISimulation
         public List<Renderer> benchRenderers = new List<Renderer>();
         
         [Header("Calculated Contrast (Theory)")]
-        [Tooltip("Floor vs Border Floor")]
         public string contrastFloorBorder;
-        [Tooltip("Floor vs Wall")]
         public string contrastFloorWall;
-        [Tooltip("Floor vs Bench")]
         public string contrastFloorBench;
-        // You can add more pairs if needed (e.g. Wall vs BorderWall)
         
+        private bool skirtingEnabled = true;
+
         // Materials Property Block for efficient color updates
         private MaterialPropertyBlock propBlock;
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         private const float MIN_DENOMINATOR = 0.01f;
+        
+        private void Awake()
+        {
+            if (Application.isPlaying)
+            {
+                ApplyExistingVariant();
+            }
+        }
 
         private void Start()
         {
             propBlock = new MaterialPropertyBlock();
             
-            // Auto-populate if empty
             if (floorRenderers.Count == 0 && floorParent) PopulateRenderers(floorParent, ref floorRenderers);
             if (borderFloorRenderers.Count == 0 && borderFloorParent) PopulateRenderers(borderFloorParent, ref borderFloorRenderers);
             if (borderWallRenderers.Count == 0 && borderWallParent) PopulateRenderers(borderWallParent, ref borderWallRenderers);
@@ -65,16 +71,63 @@ namespace VISimulation
             if (benchRenderers.Count == 0 && benchParent) PopulateRenderers(benchParent, ref benchRenderers);
             if (targetLights.Count == 0 && lightParent) PopulateLights(lightParent, ref targetLights);
 
+            ApplyExistingVariant();
             UpdateAll();
+        }
+
+        private void ApplyExistingVariant()
+        {
+            if (SimulationVariantManager.Instance != null && SimulationVariantManager.Instance.ActiveVariant != null)
+            {
+                var variant = SimulationVariantManager.Instance.ActiveVariant;
+                if (variant.sceneName == UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+                {
+                    ApplyVariant(variant);
+                }
+            }
+        }
+
+        public void ApplyVariant(SimulationVariantData variant)
+        {
+            if (variant == null) return;
+            Debug.Log($"[ContrastControllerS2] Applying Variant: {variant.variantName}");
+
+            var fl = variant.GetParameter("FloorLRV");
+            if (fl != null) lrvFloor = fl.value;
+
+            var bf = variant.GetParameter("BorderFloorLRV");
+            if (bf != null) lrvBorderFloor = bf.value;
+
+            var bw = variant.GetParameter("BorderWallLRV");
+            if (bw != null) 
+            {
+                lrvBorderWall = bw.value;
+                skirtingEnabled = bw.isEnabled;
+            }
+
+            var wl = variant.GetParameter("WallLRV");
+            if (wl != null) lrvWall = wl.value;
+
+            var bn = variant.GetParameter("BenchLRV");
+            if (bn != null) lrvBench = bn.value;
+
+            var lx = variant.GetParameter("EmLux");
+            if (lx != null) emLux = lx.value;
+
+            UpdateAll();
+
+            var menu = FindFirstObjectByType<VRContrastMenuS2>();
+            if (menu != null) menu.InitializeUI();
         }
 
         private void Update()
         {
-            // For editor testing
-            if (Application.isEditor)
-            {
-                UpdateAll();
-            }
+            UpdateAll();
+        }
+
+        private void OnValidate()
+        {
+            UpdateAll();
         }
 
         public void UpdateAll()
@@ -88,22 +141,18 @@ namespace VISimulation
         {
             SetMaterialColor(floorRenderers, lrvFloor);
             SetMaterialColor(borderFloorRenderers, lrvBorderFloor);
-            SetMaterialColor(borderWallRenderers, lrvBorderWall);
+            
+            // Special Case for Skirting (Border Wall): Hide if explicitly disabled in variant
+            if (borderWallParent != null) borderWallParent.gameObject.SetActive(skirtingEnabled);
+            if (skirtingEnabled) SetMaterialColor(borderWallRenderers, lrvBorderWall);
+
             SetMaterialColor(wallRenderers, lrvWall);
             SetMaterialColor(benchRenderers, lrvBench);
         }
 
         private void UpdateLighting()
         {
-            // Simple logic: Lux affects distinct light intensity directly or via a factor
-            // Assuming 1 Unity Light Intensity ~= 300 Lux approx factor, or just direct control
-            // Here we treat emLux as a direct scalar for Point/Spot lights intensity for simplicity in this simulation 
-            // or use a predefined factor. Let's assume EmLux maps to intensity with a factor.
-            // Adjust this factor based on your scene calibration.
-            float intensityFactor = 0.005f; // Example: 300 lux * 0.005 = 1.5 intensity
-            
             float finalIntensity = emLux * intensityFactor;
-
             foreach (var light in targetLights)
             {
                 if (light != null) light.intensity = finalIntensity;
@@ -113,20 +162,17 @@ namespace VISimulation
         private void SetMaterialColor(List<Renderer> renderers, float lrv)
         {
             if (renderers == null) return;
+            if (propBlock == null) propBlock = new MaterialPropertyBlock();
 
-            // Convert LRV to Linear RGB
-            // Y = LRV/100. In grayscale, Linear RGB = Y.
             float linearVal = Mathf.Clamp01(lrv / 100f);
             Color color = new Color(linearVal, linearVal, linearVal, 1f);
 
             foreach (var r in renderers)
             {
                 if (r == null) continue;
-                
-                // Try Property Block first
                 r.GetPropertyBlock(propBlock);
                 propBlock.SetColor(BaseColorId, color);
-                propBlock.SetColor(ColorId, color); // Fallback for standard shader
+                propBlock.SetColor(ColorId, color); 
                 r.SetPropertyBlock(propBlock);
             }
         }
@@ -147,9 +193,6 @@ namespace VISimulation
             return $"{c:F1}%";
         }
 
-        // --- Context Menu Helpers ---
-        
-        [ContextMenu("Refresh Targets")]
         public void RefreshTargets()
         {
              PopulateRenderers(floorParent, ref floorRenderers, true);
@@ -164,24 +207,16 @@ namespace VISimulation
         {
             if (forceClear || list == null) list = new List<Renderer>();
             if (parent == null) return;
-            
             var rends = parent.GetComponentsInChildren<Renderer>(true);
-            foreach (var r in rends)
-            {
-                if (!list.Contains(r)) list.Add(r);
-            }
+            foreach (var r in rends) if (!list.Contains(r)) list.Add(r);
         }
         
         private void PopulateLights(Transform parent, ref List<Light> list, bool forceClear = false)
         {
              if (forceClear || list == null) list = new List<Light>();
              if (parent == null) return;
-             
              var lights = parent.GetComponentsInChildren<Light>(true);
-             foreach(var l in lights)
-             {
-                 if (!list.Contains(l)) list.Add(l);
-             }
+             foreach(var l in lights) if (!list.Contains(l)) list.Add(l);
         }
     }
 }

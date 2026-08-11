@@ -41,7 +41,7 @@ public class PelliRobsonChart : MonoBehaviour
 
         // Clean up text
         textComponent.text = "";
-        textComponent.enableWordWrapping = true;
+        textComponent.textWrappingMode = TextWrappingModes.Normal;
         textComponent.richText = true; // We use Rich Text <color> tags
 
         // Parse Sequence

@@ -1544,6 +1544,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "ToggleSceneMenu",
+                    "type": "Button",
+                    "id": "29d77e43-9e39-487d-a853-ca15c7e241f9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1951,6 +1960,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Thumbstick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2215deb9-558a-4068-8de0-4e7d155389cc",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleSceneMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

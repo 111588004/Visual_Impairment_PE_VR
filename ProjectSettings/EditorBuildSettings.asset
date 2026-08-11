@@ -5,24 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 0
-    path: Assets/Scenes/XRI_DemoScene.unity
-    guid: 319dafa5c80f29f428dc1e0d03f04177
-  - enabled: 0
-    path: Assets/Scenes/S2_Corridor_Profile/S2_Corridor.unity
-    guid: 7300a07bf4a99114bbf68cbceb808779
-  - enabled: 0
-    path: Assets/Scenes/XRI_Test_01.unity
-    guid: 30a42a3c695f6ac4080bbdae0948a376
-  - enabled: 0
-    path: Assets/Scenes/VC1-VSCS_Profile/VC1-VSCS.unity
-    guid: e4220c2cbb6bd8e4c91a039f0310a994
   - enabled: 1
     path: Assets/Scenes/S1_Stairway_Profile/S1_Stairway.unity
     guid: 36bc59d898289b349ba6faf28e51c9fe
+  - enabled: 1
+    path: Assets/Scenes/S2_Corridor_Profile/S2_Corridor.unity
+    guid: 7300a07bf4a99114bbf68cbceb808779
+  - enabled: 1
+    path: Assets/Scenes/S3_InteriorSignage_Profile/S3_InteriorSignage.unity
+    guid: e8306830f2111d440bd3ff2633940c10
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 11f157b38c7306d4ba744a672dc91563, type: 2}

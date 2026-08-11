@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace VISimulation
 {
     [ExecuteAlways]
-    public class ContrastController : MonoBehaviour
+    public class ContrastController : MonoBehaviour, ISimulationController
     {
         [Header("Target Object Groups (Drag Parent for Auto-Fill)")]
         public GameObject nosingParent;
@@ -23,8 +23,8 @@ namespace VISimulation
         [Tooltip("Environment Illuminance in Lux (Em)")]
         [Min(0)]
         public float emLux = 300f;
-        [Tooltip("Conversion Factor: Lux to Point Light Intensity. Adjust this until the scene brightness looks correct (~0.003 for Point Lights).")]
-        public float pointLightFactor = 0.1f;
+        [Tooltip("Conversion Factor: Lux to Point Light Intensity. Adjust this until the scene brightness looks correct (~0.03).")]
+        public float intensityFactor = 0.03f;
 
         [Header("LRV Settings (0-100 CIE Y)")]
         [Range(0, 100)] public float lrvNosing = 50f;
@@ -36,12 +36,11 @@ namespace VISimulation
         public bool usePropertyBlock = true;
 
         [Space]
-        [Header("Nosing vs Tread")]
+        [Header("Calculated Contrast (Theory)")]
         [SerializeField] private string contrastNosingTread; 
-
-        [Space]
-        [Header("Wall vs Tread")]
         [SerializeField] private string contrastWallTread;
+
+        private bool nosingEnabled = true;
 
         // Scientific Compromise: Black Floor for VR
         private const float MIN_DENOMINATOR = 0.01f;
@@ -91,6 +90,71 @@ namespace VISimulation
             }
         }
 
+        private void Awake()
+        {
+            if (Application.isPlaying)
+            {
+                ApplyExistingVariant();
+            }
+        }
+
+        private void Start()
+        {
+            if (Application.isPlaying)
+            {
+                ApplyExistingVariant();
+            }
+        }
+
+        private void ApplyExistingVariant()
+        {
+            if (SimulationVariantManager.Instance != null && SimulationVariantManager.Instance.ActiveVariant != null)
+            {
+                var variant = SimulationVariantManager.Instance.ActiveVariant;
+                if (variant.sceneName == UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
+                {
+                    ApplyVariant(variant);
+                }
+            }
+        }
+
+        public void ApplyVariant(SimulationVariantData variant)
+        {
+            if (variant == null) return;
+            Debug.Log($"[ContrastController] Applying Variant: {variant.variantName}");
+
+            var nx = variant.GetParameter("NosingLRV");
+            if (nx != null) 
+            {
+                lrvNosing = nx.value;
+                nosingEnabled = nx.isEnabled;
+            }
+
+            var tr = variant.GetParameter("TreadLRV");
+            if (tr != null) lrvTread = tr.value;
+
+            var wl = variant.GetParameter("WallLRV");
+            if (wl != null) lrvWall = wl.value;
+
+            var lx = variant.GetParameter("EmLux");
+            if (lx != null) emLux = lx.value;
+
+            UpdateMaterials();
+            UpdateLighting();
+            CalculateContrast();
+
+            // Refresh VR Menu if it exists
+            var menu = FindFirstObjectByType<VRContrastMenu>();
+            if (menu != null) menu.InitializeUI();
+        }
+
+        public void UpdateAll()
+        {
+            UpdateMaterials();
+            UpdateLighting();
+            CalculateContrast();
+        }
+
         private void Update()
         {
             UpdateMaterials();
@@ -100,7 +164,10 @@ namespace VISimulation
 
         private void UpdateMaterials()
         {
-            SetMaterialColor(nosingRenderers, lrvNosing);
+            // Special Case for Nosing: Hide if isEnabled is false
+            if (nosingParent != null) nosingParent.SetActive(nosingEnabled);
+            if (nosingEnabled) SetMaterialColor(nosingRenderers, lrvNosing);
+
             SetMaterialColor(treadRenderers, lrvTread);
             SetMaterialColor(wallRenderers, lrvWall);
         }
@@ -109,10 +176,7 @@ namespace VISimulation
         {
             if (renderers == null) return;
             
-            // [CIE 1931 Chroma Matching / Luminance Logic]
-            // Standard Formula: Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
-            // In Linear Space, Gray RGB = Y/100
-            
+            // Standard Formula: Y = LRV/100
             float linearVal = lrv / 100f;
             Color color = new Color(linearVal, linearVal, linearVal, 1f);
             
@@ -139,14 +203,6 @@ namespace VISimulation
                         r.material.color = color;
                         if (r.material.HasProperty("_BaseColor")) r.material.SetColor("_BaseColor", color);
                     }
-                    else
-                    {
-                        r.SetPropertyBlock(null); // Clear previous
-                         MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-                         mpb.SetColor("_BaseColor", color);
-                         mpb.SetColor("_Color", color);
-                         r.SetPropertyBlock(mpb);
-                    }
                 }
             }
         }
@@ -155,7 +211,7 @@ namespace VISimulation
         {
             if (targetLights != null)
             {
-                float intensity = emLux * pointLightFactor;
+                float intensity = emLux * intensityFactor;
                 foreach (var light in targetLights)
                 {
                     if (light != null) light.intensity = intensity;
@@ -165,20 +221,14 @@ namespace VISimulation
 
         private void CalculateContrast()
         {
-            // Pair A: Nosing vs Tread
             contrastNosingTread = CalculateLRVContrast(lrvNosing, lrvTread);
-
-            // Pair B: Wall vs Tread
             contrastWallTread = CalculateLRVContrast(lrvWall, lrvTread);
         }
 
         private string CalculateLRVContrast(float LRV1, float LRV2)
         {
-            // Identify Bright vs Dark
             float B_bright = Mathf.Max(LRV1, LRV2);
             float B_dark = Mathf.Min(LRV1, LRV2);
-
-            // General LRV Contrast: (B1 - B2) / B1
             float denomLRV = Mathf.Max(B_bright, MIN_DENOMINATOR);
             float c_lrv = (B_bright - B_dark) / denomLRV * 100f;
             return $"{c_lrv:F1}%";

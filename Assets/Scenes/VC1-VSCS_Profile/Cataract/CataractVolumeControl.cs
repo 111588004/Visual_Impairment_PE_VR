@@ -9,7 +9,9 @@ public class CataractVolumeControl : MonoBehaviour
     {
         Normal_20_20,
         Mild_20_40,
+        Mild_20_60,
         Moderate_20_80,
+        Moderate_20_100,
         Severe_20_200
     }
 
@@ -68,36 +70,32 @@ public class CataractVolumeControl : MonoBehaviour
         if (_dof == null || _colorAdj == null) return;
 
         // 1. Blur (Snellen)
-        // Using Gaussian Depth of Field to simulate acuity loss
-        _dof.active = true;
-        _dof.mode.Override(DepthOfFieldMode.Gaussian);
-        
-        float blurRadius = 0f;
-        switch (snellenValue)
-        {
-            case SnellenAcuity.Normal_20_20: blurRadius = 0f; break;
-            case SnellenAcuity.Mild_20_40:   blurRadius = 1.0f; break; // Slight blur
-            case SnellenAcuity.Moderate_20_80: blurRadius = 2.0f; break; // Significant blur
-            case SnellenAcuity.Severe_20_200: blurRadius = 4.0f; break; // Legal blindness
-        }
-        
-        // In Gaussian mode, 'Start' is usually 0, 'End' controls range, 
-        // but 'Max Radius' isn't directly exposed in all URP versions via script easily on 'Gaussian'.
-        // Actually, for Gaussian, we control properites like 'Gaussian Start' / 'Gaussian End'.
-        // To make everything blurry: Start=0, End=0.
-        // Wait, standard URP Gaussian: Start (distance), End (distance). 
-        // Max Radius is often hardcoded or set in High Quality settings.
-        // Let's set Start=0, End=0.1 to force near-field blur?
-        // NO, Gaussian DoF blurs things *outside* the range.
-        // So we set Start=0, End=0 -> Everything is far -> Everything blurred?
-        // Or Start=999 -> Everything is near -> Everything blurred?
-        // A reliable VR blur trick: Set Start=0, End=0, MaxRadius=1.5.
-        
+        // Using Gaussian Depth of Field to simulate acuity loss 
+        // 由於 Start = 0，End = 0 代表整個場景都會受到模糊影響
         _dof.gaussianStart.Override(0f);
         _dof.gaussianEnd.Override(0f); 
-        // Note: Actual blur amount depends on URP Quality Settings 'Max Radius'. 
-        // Ideally we would control the radius directly but scripting API varies.
-        // Assuming consistent basic blur behavior.
+
+        float radius = 0f;
+        switch (snellenValue)
+        {
+            case SnellenAcuity.Normal_20_20:   radius = 0f; break; // 20/20，維持原樣
+            case SnellenAcuity.Mild_20_40:     radius = 1.0f; break; 
+            case SnellenAcuity.Mild_20_60:     radius = 1.5f; break; 
+            case SnellenAcuity.Moderate_20_80: radius = 2.0f; break; 
+            case SnellenAcuity.Moderate_20_100:radius = 2.5f; break; 
+            case SnellenAcuity.Severe_20_200:  radius = 5.0f; break; // 基於 40=1.0 為基準所以放大為 5.0
+        }
+        
+        if (radius <= 0f)
+        {
+            _dof.active = false;
+        }
+        else
+        {
+            _dof.active = true;
+            _dof.mode.Override(DepthOfFieldMode.Gaussian);
+            _dof.gaussianMaxRadius.Override(radius);
+        }
         
         // 2. Contrast & Tint (logMAR + Nuclear)
         _colorAdj.active = true;

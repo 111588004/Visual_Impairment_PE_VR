@@ -87,25 +87,34 @@ Material:
     - _AlphaToMask: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
+    - _BlurSize: 0
+    - _Brightness: 1
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
+    - _Contrast: 0.46
     - _Cull: 2
     - _Cutoff: 0.5
+    - _DebugMode: 1
+    - _Desaturation: 0
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _EyeAspect: 2
+    - _GlobalBrightness: 1
+    - _GlobalContrast: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
+    - _PeripheralDarkness: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _ReferenceFOV: 110
     - _Scale: 1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
@@ -119,7 +128,7 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GazeCenter: {r: 0, g: 0, b: 0, a: 0}
+    - _GazeCenter: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

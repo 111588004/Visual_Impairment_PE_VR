@@ -26,35 +26,25 @@ namespace VISimulation
         public InputActionReference menuButtonAction; // Reference to XRI Left/Right Hand Menu Button
 
         private bool isMenuVisible = true; // Start visible
+        private Canvas canvasComponent;
 
         private void Start()
         {
-            if (contrastController == null)
-            {
-                contrastController = FindObjectOfType<ContrastController>();
-            }
+            InitializeUI();
+            EnsureJoystickNavigator();
+        }
 
-            Debug.Log("[VRMenu] Script Started. Initializing...");
-
-            // Initialize Sliders with current values
-            if (contrastController != null)
+        private void EnsureJoystickNavigator()
+        {
+            if (menuCanvas != null)
             {
-                if (sliderNosing) sliderNosing.value = contrastController.lrvNosing;
-                if (sliderTread) sliderTread.value = contrastController.lrvTread;
-                if (sliderWall) sliderWall.value = contrastController.lrvWall;
-                if (sliderLux) sliderLux.value = contrastController.emLux;
+                var nav = menuCanvas.GetComponent<VRMenuJoystickNavigator>();
+                if (nav == null) nav = menuCanvas.AddComponent<VRMenuJoystickNavigator>();
                 
-                // Add Listeners
-                if (sliderNosing) sliderNosing.onValueChanged.AddListener(OnNosingChanged);
-                if (sliderTread) sliderTread.onValueChanged.AddListener(OnTreadChanged);
-                if (sliderWall) sliderWall.onValueChanged.AddListener(OnWallChanged);
-                if (sliderLux) sliderLux.onValueChanged.AddListener(OnLuxChanged);
+                // If you have a specific Input Action for XRI Left Hand Move, 
+                // we can try to auto-find it, but usually better if user assigns in Inspector.
+                // For now, it will use the public field in the inspector.
             }
-
-            UpdateLabels();
-            
-            // Start visible as requested
-            SetMenuVisibility(true);
         }
 
         private void OnEnable()
@@ -69,6 +59,7 @@ namespace VISimulation
             {
                 Debug.LogError("[VRMenu] Menu Button Action is missing or not assigned!");
             }
+            InitializeUI();
         }
 
         private void OnDisable()
@@ -80,39 +71,208 @@ namespace VISimulation
             }
         }
 
-        private void OnMenuButtonPressed(InputAction.CallbackContext context)
+        public void InitializeUI()
         {
-            Debug.Log("[VRMenu] Button Pressed!"); // Check if input is received
-            isMenuVisible = !isMenuVisible;
-            SetMenuVisibility(isMenuVisible);
-            
-            // Optional: Move menu to front of user when opened
-            if (isMenuVisible && menuCanvas != null)
+            if (contrastController == null)
             {
-                // Simple positioning: 1m in front of camera at eye level
-                Transform cam = Camera.main.transform;
-                if (cam != null)
+                contrastController = FindFirstObjectByType<ContrastController>();
+            }
+
+            if (contrastController != null)
+            {
+                // Sync Sliders
+                if (sliderNosing) 
                 {
-                    menuCanvas.transform.position = cam.position + cam.forward * 1.5f;
-                    // Make it face the camera
-                    menuCanvas.transform.rotation = Quaternion.LookRotation(menuCanvas.transform.position - cam.position);
-                    Debug.Log($"[VRMenu] Moved Canvas to: {menuCanvas.transform.position}");
+                    sliderNosing.onValueChanged.RemoveAllListeners();
+                    sliderNosing.value = contrastController.lrvNosing;
+                    sliderNosing.onValueChanged.AddListener(OnNosingChanged);
                 }
+                if (sliderTread) 
+                {
+                    sliderTread.onValueChanged.RemoveAllListeners();
+                    sliderTread.value = contrastController.lrvTread;
+                    sliderTread.onValueChanged.AddListener(OnTreadChanged);
+                }
+                if (sliderWall) 
+                {
+                    sliderWall.onValueChanged.RemoveAllListeners();
+                    sliderWall.value = contrastController.lrvWall;
+                    sliderWall.onValueChanged.AddListener(OnWallChanged);
+                }
+                if (sliderLux) 
+                {
+                    sliderLux.onValueChanged.RemoveAllListeners();
+                    sliderLux.value = contrastController.emLux;
+                    sliderLux.onValueChanged.AddListener(OnLuxChanged);
+                }
+            }
+
+            UpdateLabels();
+            ApplyDynamicUI();
+            
+            // Fix World Camera
+            if (menuCanvas != null)
+            {
+                if (canvasComponent == null) canvasComponent = menuCanvas.GetComponent<Canvas>();
+                if (canvasComponent != null && canvasComponent.worldCamera == null) canvasComponent.worldCamera = Camera.main;
             }
         }
 
-        private Canvas canvasComponent;
+        private void ApplyDynamicUI()
+        {
+            if (SimulationVariantManager.Instance != null && SimulationVariantManager.Instance.ActiveVariant != null)
+            {
+                var variant = SimulationVariantManager.Instance.ActiveVariant;
+                
+                SetGroupVisibility(sliderNosing, textNosing, IsAdjustable(variant, "NosingLRV"));
+                SetGroupVisibility(sliderTread, textTread, IsAdjustable(variant, "TreadLRV"));
+                SetGroupVisibility(sliderWall, textWall, IsAdjustable(variant, "WallLRV"));
+                SetGroupVisibility(sliderLux, textLux, IsAdjustable(variant, "EmLux"));
+
+                // Refresh Layout to Center remaining items
+                RebuildLayout();
+                
+                // Refresh Joystick Navigator to update the list of active sliders
+                var nav = menuCanvas?.GetComponent<VRMenuJoystickNavigator>();
+                if (nav != null) nav.RefreshSliders();
+            }
+        }
+
+        private void RebuildLayout()
+        {
+            if (menuCanvas == null) return;
+            
+            RectTransform container = GetLayoutContainer();
+            if (container == null) return;
+
+            float currentWidth = container.rect.width;
+            if (currentWidth < 100) currentWidth = 600f;
+
+            var layout = container.GetComponent<VerticalLayoutGroup>();
+            if (layout == null) layout = container.gameObject.AddComponent<VerticalLayoutGroup>();
+            
+            var fitter = container.GetComponent<ContentSizeFitter>();
+            if (fitter == null) fitter = container.gameObject.AddComponent<ContentSizeFitter>();
+
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = false;
+            layout.childControlHeight = false;
+            layout.childControlWidth = false;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.padding = new RectOffset(40, 40, 40, 40);
+            layout.spacing = 40f;
+
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            container.anchorMax = new Vector2(0.5f, 0.5f);
+            container.anchorMin = new Vector2(0.5f, 0.5f);
+            container.pivot = new Vector2(0.5f, 0.5f);
+            container.sizeDelta = new Vector2(600f, container.sizeDelta.y);
+            container.anchoredPosition = Vector2.zero;
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(container);
+        }
+
+        private RectTransform GetLayoutContainer()
+        {
+            if (menuCanvas == null) return null;
+            
+            // 1. Try to find existing VerticalLayoutGroup
+            var layout = menuCanvas.GetComponentInChildren<VerticalLayoutGroup>(true);
+            if (layout != null) return layout.GetComponent<RectTransform>();
+            
+            // 2. Fallback: First child that isn't null and has RectTransform
+            if (menuCanvas.transform.childCount > 0)
+            {
+                var firstChild = menuCanvas.transform.GetChild(0) as RectTransform;
+                if (firstChild != null) return firstChild;
+            }
+            
+            // 3. Last fallback: menuCanvas itself
+            return menuCanvas.GetComponent<RectTransform>();
+        }
+
+        private bool IsAdjustable(SimulationVariantData variant, string id)
+        {
+            var p = variant.GetParameter(id);
+            return p != null ? p.isAdjustable : true;
+        }
+
+        private void SetGroupVisibility(Slider s, Text valText, bool visible)
+        {
+            if (s) ToggleRow(s.gameObject, visible);
+            if (valText) ToggleRow(valText.gameObject, visible);
+        }
+
+        private void ToggleRow(GameObject obj, bool active)
+        {
+            if (obj == null) return;
+
+            RectTransform container = GetLayoutContainer();
+            if (container == null || container.gameObject == obj)
+            {
+                obj.SetActive(active);
+                return;
+            }
+
+            Transform t = obj.transform;
+            // Go up until we are a direct child of the layout container
+            while (t.parent != null && t.parent != container && t.parent.gameObject != menuCanvas)
+            {
+                t = t.parent;
+            }
+
+            // Set the row active/inactive IF it's not the container itself
+            if (t != null && t.gameObject != menuCanvas && t.gameObject != container.gameObject)
+            {
+                t.gameObject.SetActive(active);
+            }
+            else
+            {
+                obj.SetActive(active);
+            }
+        }
+
+        private void SetParentOrSelfActive(GameObject obj, bool active)
+        {
+            if (obj == null) return;
+            obj.SetActive(active);
+            if (obj.transform.parent != null && (obj.transform.parent.name.Contains("Row") || obj.transform.parent.name.Contains("Group")))
+            {
+                obj.transform.parent.gameObject.SetActive(active);
+            }
+        }
+
+        private void OnMenuButtonPressed(InputAction.CallbackContext context)
+        {
+            Debug.Log("[VRMenu] Button Pressed!");
+            isMenuVisible = !isMenuVisible;
+            SetMenuVisibility(isMenuVisible);
+            
+            if (isMenuVisible && menuCanvas != null)
+            {
+                Transform cam = Camera.main.transform;
+                if (cam != null)
+                {
+                    menuCanvas.transform.position = cam.position + cam.forward * 1.2f;
+                    menuCanvas.transform.rotation = Quaternion.LookRotation(menuCanvas.transform.position - cam.position);
+                }
+            }
+        }
 
         public void SetMenuVisibility(bool visible)
         {
             isMenuVisible = visible;
             
-            // Fix: Don't use SetActive(false) on the root object, because it kills the Input Listener!
-            // Instead, we toggle the Canvas component or the child Panel.
-            
             if (canvasComponent == null && menuCanvas != null)
             {
                 canvasComponent = menuCanvas.GetComponent<Canvas>();
+            }
+
+            if (canvasComponent != null && canvasComponent.worldCamera == null)
+            {
+                canvasComponent.worldCamera = Camera.main;
             }
 
             if (canvasComponent != null)
@@ -121,15 +281,12 @@ namespace VISimulation
             }
             else if (menuCanvas != null)
             {
-                // Fallback: If user assigned a Panel (not the root Canvas), SetActive is fine.
-                // But if they assigned the Root Object (which has this script), we must NOT disable it.
                 if (menuCanvas != gameObject)
                 {
                     menuCanvas.SetActive(visible);
                 }
                 else
                 {
-                     // If they assigned the self object, try to find a canvas to disable
                      Canvas c = GetComponent<Canvas>();
                      if(c) c.enabled = visible;
                 }
@@ -142,32 +299,37 @@ namespace VISimulation
         {
             if (contrastController) contrastController.lrvNosing = value;
             UpdateLabels();
+            if (contrastController) contrastController.UpdateAll();
         }
 
         private void OnTreadChanged(float value)
         {
             if (contrastController) contrastController.lrvTread = value;
             UpdateLabels();
+            if (contrastController) contrastController.UpdateAll();
         }
 
         private void OnWallChanged(float value)
         {
             if (contrastController) contrastController.lrvWall = value;
             UpdateLabels();
+            if (contrastController) contrastController.UpdateAll();
         }
 
         private void OnLuxChanged(float value)
         {
             if (contrastController) contrastController.emLux = value;
             UpdateLabels();
+            if (contrastController) contrastController.UpdateAll();
         }
 
         private void UpdateLabels()
         {
-            if (textNosing) textNosing.text = $"Nosing LRV: {contrastController.lrvNosing:F1}";
-            if (textTread) textTread.text = $"Tread LRV: {contrastController.lrvTread:F1}";
-            if (textWall) textWall.text = $"Wall LRV: {contrastController.lrvWall:F1}";
-            if (textLux) textLux.text = $"Em Lux: {contrastController.emLux:F0}";
+            if (!contrastController) return;
+            if (textNosing) textNosing.text = $"{contrastController.lrvNosing:F1}";
+            if (textTread) textTread.text = $"{contrastController.lrvTread:F1}";
+            if (textWall) textWall.text = $"{contrastController.lrvWall:F1}";
+            if (textLux) textLux.text = $"{contrastController.emLux:F0}";
         }
     }
 }

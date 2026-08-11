@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0687a83119d0e14489ddc3488487d31c, type: 3}
+  m_Name: S3_Task2_FontSize
+  m_EditorClassIdentifier: 
+  variantName: S3_Task2_FontSize
+  sceneName: S3_InteriorSignage
+  parameters:
+  - parameterId: Height
+    value: 150
+    isAdjustable: 0
+    isEnabled: 1
+  - parameterId: FontSize
+    value: 50
+    isAdjustable: 1
+    isEnabled: 1
+  - parameterId: BoardLRV
+    value: 90
+    isAdjustable: 0
+    isEnabled: 1
+  - parameterId: TextLRV
+    value: 20
+    isAdjustable: 0
+    isEnabled: 1
+  - parameterId: WallLRV
+    value: 80
+    isAdjustable: 0
+    isEnabled: 1

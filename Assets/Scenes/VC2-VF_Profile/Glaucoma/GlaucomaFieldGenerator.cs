@@ -39,16 +39,16 @@ public class GlaucomaFieldGenerator : MonoBehaviour
 
         if (isEffectivelyEmpty)
         {
-            ApplyTunnelVision20(); // Default to Tunnel Vision if empty
+            ApplyTunnelVision40(); // Default to Tunnel Vision if empty
         }
     }
 
-    [ContextMenu("Apply 20deg Tunnel Vision")]
-    public void ApplyTunnelVision20()
+    [ContextMenu("Apply 40deg Tunnel Vision")]
+    public void ApplyTunnelVision40()
     {
         zones = new List<FieldZone>
         {
-            // Clear Central Vision (0 to 20)
+            // Clear Central Vision (0 to 20 Radius = 40 Diameter)
             new FieldZone { startAngle = 0, endAngle = 20, sensitivity = 1.0f },
             // Sharp Transition (20 to 20.1) - avoids hard aliasing artifact
             new FieldZone { startAngle = 20, endAngle = 20.1f, sensitivity = 0.5f },
@@ -56,19 +56,19 @@ public class GlaucomaFieldGenerator : MonoBehaviour
             new FieldZone { startAngle = 20.1f, endAngle = 180, sensitivity = 0.0f }
         };
         GenerateTexture();
-        Debug.Log("Applied 20-degree Tunnel Vision settings.");
+        Debug.Log("Applied 40-degree Diameter Tunnel Vision (20-degree Radius).");
     }
 
     [ContextMenu("Apply Realistic Tunnel (Soft Edge)")]
-    public void ApplyRealisticTunnel20()
+    public void ApplyRealisticTunnel40()
     {
         // Force Recompile verification
         zones = new List<FieldZone>();
         
-        // 1. Central Clear Zone (0 to 20)
+        // 1. Central Clear Zone (0 to 20 Radius = 40 Diameter)
         zones.Add(new FieldZone { startAngle = 0, endAngle = 20, sensitivity = 1.0f });
 
-        // 2. Gradient Falloff (20 to 30)
+        // 2. Gradient Falloff (20 to 30 Radius = 40 to 60 Diameter)
         // Create 10 steps of hardening blur
         int steps = 20;
         float startDeg = 20f;
@@ -92,11 +92,11 @@ public class GlaucomaFieldGenerator : MonoBehaviour
             zones.Add(new FieldZone { startAngle = angleA, endAngle = angleB, sensitivity = s });
         }
 
-        // 3. Rest is Blind (35 to 180)
+        // 3. Rest is Blind (20 to 180)
         zones.Add(new FieldZone { startAngle = endDeg, endAngle = 180, sensitivity = 0.0f });
 
         GenerateTexture();
-        Debug.Log($"Applied Realistic Tunnel Vision ({startDeg}-{endDeg} deg falloff).");
+        Debug.Log($"Applied Realistic Tunnel Vision ({startDeg}-{endDeg} deg radius falloff).");
     }
 
     [ContextMenu("Generate Texture")]
@@ -169,11 +169,11 @@ public class GlaucomaFieldGenerator : MonoBehaviour
     }
 
     [Header("Quick Actions (Click to Apply)")]
-    [Tooltip("Click to apply sharp 20-degree tunnel vision")]
-    public bool action_ApplyStandard20 = false;
+    [Tooltip("Click to apply sharp 40-degree tunnel vision")]
+    public bool action_ApplyStandard40 = false;
     
-    [Tooltip("Click to apply realistic 20-30 degree gradient tunnel vision")]
-    public bool action_ApplyRealistic20 = false;
+    [Tooltip("Click to apply realistic 20-30 degree radius gradient tunnel vision")]
+    public bool action_ApplyRealistic40 = false;
 
     [Header("Debug")]
     public bool showGizmos = true;
@@ -182,16 +182,16 @@ public class GlaucomaFieldGenerator : MonoBehaviour
     // Auto-update in Editor when values change
     private void OnValidate()
     {
-        if (action_ApplyStandard20)
+        if (action_ApplyStandard40)
         {
-            ApplyTunnelVision20();
-            action_ApplyStandard20 = false;
+            ApplyTunnelVision40();
+            action_ApplyStandard40 = false;
         }
 
-        if (action_ApplyRealistic20)
+        if (action_ApplyRealistic40)
         {
-            ApplyRealisticTunnel20();
-            action_ApplyRealistic20 = false;
+            ApplyRealisticTunnel40();
+            action_ApplyRealistic40 = false;
         }
     }
 

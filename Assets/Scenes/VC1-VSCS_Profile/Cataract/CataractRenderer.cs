@@ -4,17 +4,11 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RawImage))]
 public class CataractRenderer : MonoBehaviour
 {
-    public enum SnellenAcuity
-    {
-        Normal_20_20 = 20,
-        Mild_20_40 = 40,
-        Moderate_20_80 = 80,
-        Severe_20_200 = 200
-    }
 
     [Header("Clinical Parameters")]
-    [Tooltip("Visual Acuity (Snellen Denominator). 20/20 is normal.")]
-    public SnellenAcuity snellenValue = SnellenAcuity.Moderate_20_80;
+    [Tooltip("Visual Acuity Denominator (20/X). e.g. 20, 40, 60, 80, 100...")]
+    [Range(20, 200)]
+    public int snellenDenominator = 80;
     
     [Tooltip("Contrast Sensitivity (logMAR-like factor). 1.0 is Normal, 0.6 is Cataract.")]
     [Range(0.1f, 1.5f)]
@@ -23,6 +17,12 @@ public class CataractRenderer : MonoBehaviour
     [Header("Cataract Type")]
     [Tooltip("Simulate Yellowing of the lens (Nuclear Sclerosis).")]
     public bool enableNuclearTint = true;
+    
+    [Range(0.0f, 5.0f)]
+    [Tooltip("Clinical Nuclear Sclerosis Grade (0: Normal, 4: Brunescent, 5: Nigra/Black).")]
+    public float nuclearSclerosisGrade = 1.0f;
+
+    [Tooltip("Manual Tint adjustment (Overrides Grade if not using Auto-Calculation).")]
     public Color nuclearTint = new Color(1.0f, 0.95f, 0.85f, 1.0f);
     
     [Tooltip("Simulate Glare/Bloom (Light Scattering).")]
@@ -80,16 +80,13 @@ public class CataractRenderer : MonoBehaviour
         if (_material == null) return;
 
         // 1. Map Snellen 20/X to Blur Size
-        // 20/20 = 0 blur
-        // 20/80 = 4x blur factor
-        float blurSigma = 0f;
-        switch (snellenValue)
-        {
-            case SnellenAcuity.Normal_20_20: blurSigma = 0.0f; break;
-            case SnellenAcuity.Mild_20_40:   blurSigma = 1.0f; break;
-            case SnellenAcuity.Moderate_20_80: blurSigma = 2.5f; break;
-            case SnellenAcuity.Severe_20_200: blurSigma = 5.0f; break;
-        }
+        // Snapping: Align to 20 units as requested
+        snellenDenominator = Mathf.RoundToInt(snellenDenominator / 20f) * 20;
+        if (snellenDenominator < 20) snellenDenominator = 20;
+
+        // Formula: (Denominator - 20) * factor. 
+        // 20/80 (gap 60) -> 2.5 blur means factor = 2.5/60 = 0.0416
+        float blurSigma = (snellenDenominator - 20) * 0.0416f;
         
         // 2. Map logMAR/Contrast
         // Note: Clinical logMAR 0.6 is 20/80 equivalent acuity, but contrast is separate.
@@ -101,7 +98,12 @@ public class CataractRenderer : MonoBehaviour
         // 3. Tint & Glare
         if (enableNuclearTint)
         {
-            _material.SetColor("_Tint", nuclearTint);
+            // Calculate Tint from Clinical Grade (0-4)
+            Color calculatedTint = GetNSTint(nuclearSclerosisGrade);
+            _material.SetColor("_Tint", calculatedTint);
+            
+            // Sync the preview color in inspector (optional, but helpful)
+            nuclearTint = calculatedTint;
         }
         else
         {
@@ -109,5 +111,25 @@ public class CataractRenderer : MonoBehaviour
         }
 
         _material.SetColor("_OverlayColor", new Color(1, 1, 1, glareIntensity)); // Alpha controls glare
+    }
+
+    private Color GetNSTint(float grade)
+    {
+        // Clinical NS Color Scale (Simplified)
+        Color[] nsColors = new Color[] {
+            new Color(1.0f, 1.0f, 1.0f),         // 0: Normal
+            new Color(1.0f, 0.95f, 0.75f),      // 1: Mild Yellow
+            new Color(1.0f, 0.85f, 0.45f),      // 2: Moderate Amber
+            new Color(0.85f, 0.55f, 0.15f),     // 3: Severe Brown/Amber
+            new Color(0.60f, 0.30f, 0.05f),     // 4: Brunescent (Deep Chocolate)
+            new Color(0.15f, 0.08f, 0.02f)      // 5: Nigra (Black/Dark Brown)
+        };
+
+        grade = Mathf.Clamp(grade, 0, 5);
+        int index = Mathf.FloorToInt(grade);
+        if (index >= 5) return nsColors[5];
+        
+        float t = grade - index;
+        return Color.Lerp(nsColors[index], nsColors[index + 1], t);
     }
 }
