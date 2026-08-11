@@ -14,16 +14,6 @@
 - **VC1 – VSCS Profile (Cataract)**: Cataract simulation, Pelli-Robson contrast chart
 - **VC2 – VF Profile (Glaucoma)**: Visual field loss / glaucoma simulation
 
-## Simulation concepts
-
-Binocular gaze projection used for the glaucoma visual-field filter:
-
-<img src="docs/images/glaucoma_projection_diagram.png" alt="Binocular gaze projection through 2D filter onto true 3D scene" width="720">
-
-Comparison of the two glaucoma sensitivity transition modes (sharp edge vs. soft gradient):
-
-<img src="docs/images/glaucoma_transition_modes.png" alt="Comparison of glaucoma sensitivity transition modes" width="720">
-
 ## Tech stack
 
 - Unity 6000.3.21f1 LTS, Universal Render Pipeline (URP)
