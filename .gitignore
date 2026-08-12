@@ -12,6 +12,9 @@
 # MemoryCaptures can get excessive
 /[Mm]emoryCaptures/
 
+# Generated gaze-tracking CSV logs (see GazeDataRecorder.cs)
+/[Aa]ssets/Data/GazeLogs/
+
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
 
