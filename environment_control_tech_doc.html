@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environmental Variable Control Technical Documentation</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-left: 5px solid #3498db;
+            padding-left: 10px;
+            background-color: #e8f6f3;
+            padding: 8px 10px;
+        }
+
+        h3 {
+            color: #16a085;
+            margin-top: 25px;
+        }
+
+        h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+            color: #c0392b;
+            display: inline-block;
+        }
+
+        .highlight-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .math-block {
+            background-color: #ffffff;
+            padding: 15px;
+            border-left: 4px solid #8e44ad;
+            margin: 10px 0;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 1.1em;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+    </style>
+    <!-- MathJax for formula rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+
+    <div style="background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+        <h1>Environmental Variable Control (環境變數控制技術文件)</h1>
+
+        <div
+            style="background-color: #eef9f0; padding: 15px; border-radius: 5px; border: 1px solid #c3e6cb; color: #155724; margin-bottom: 30px;">
+            <strong>文件摘要：</strong> 本文說明三大無障礙測試場景 (Stairway, Corridor, Signage) 中的環境參數控制機制。系統允許在 Runtime 即時調整照明
+            (Lux)、物件反射率 (LRV) 與幾何尺寸，以驗證不同環境條件下低視力患者的視覺效能。
+        </div>
+
+        <!-- SCENE 1 -->
+        <h2>1. Scene 1: Stairway Safety (樓梯安全與對比度)</h2>
+        <p>本場景專注於驗證樓梯行走安全，重點在於<strong>梯階邊緣 (Nosing / Strip)</strong> 與踏面、牆面的明度對比。</p>
+
+        <h3>1.1 Control Variables (控制變數)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">環境變數 (Variable)</th>
+                    <th style="width: 30%;">設計意義 (Significance)</th>
+                    <th style="width: 25%;">Unity 實作參數 (Script Param)</th>
+                    <th style="width: 20%;">數值範圍 (Range)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>環境照度<br>(Illuminance)</strong></td>
+                    <td>模擬不同空間的明亮程度 (如昏暗梯間 vs 明亮大廳)，直接影響低視力者的對比辨識能力。</td>
+                    <td><code>emLux</code> (Float)<br>Script: <code>ContrastController.cs</code></td>
+                    <td>0 ~ 1000 Lux<br>(Default: 300)</td>
+                </tr>
+                <tr>
+                    <td><strong>光反射值<br>(LRV - Light Reflectance Value)</strong></td>
+                    <td>定義材質表面的反光特性 (0=全黑, 100=全白)。是計算對比度的物理基礎 (CIE Y)。</td>
+                    <td><code>lrvNosing</code> (防滑條)<br><code>lrvTread</code> (踏面)<br><code>lrvWall</code> (牆面)</td>
+                    <td>0.0 ~ 100.0</td>
+                </tr>
+                <tr>
+                    <td><strong>輝度對比<br>(Luminance Contrast)</strong></td>
+                    <td>依據 LRV 自動計算的對比百分比，檢核法規遵循度。</td>
+                    <td>Computed Logic:<br><code>(B1 - B2) / B1 * 100%</code></td>
+                    <td>Read-only (Display UI)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SCENE 2 -->
+        <h2>2. Scene 2: Corridor Navigation (廊道引導與邊界)</h2>
+        <p>本場景模擬公共廊道環境，測試患者對於<strong>路徑邊界 (Floor-Wall Boundary)</strong> 與障礙物 (Bench) 的偵測能力。</p>
+
+        <h3>2.1 Control Variables (控制變數)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">環境變數 (Variable)</th>
+                    <th style="width: 30%;">設計意義 (Significance)</th>
+                    <th style="width: 25%;">Unity 實作參數 (Script Param)</th>
+                    <th style="width: 20%;">數值範圍 (Range)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>整體亮度係數<br>(Intensity Factor)</strong></td>
+                    <td>將 Lux 物理量轉換為 Unity Light Intensity 的調控係數，用於微調渲染管線的曝光反應。</td>
+                    <td><code>intensityFactor</code><br>Script: <code>ContrastControllerS2.cs</code></td>
+                    <td>0.001 ~ 0.1</td>
+                </tr>
+                <tr>
+                    <td><strong>多層次 LRV 控制<br>(Multi-Layer LRV)</strong></td>
+                    <td>支援複雜空間的配色驗證，包含地板、踢腳板 (Border Floor/Wall) 與牆面的多重對比。</td>
+                    <td><code>lrvFloor</code> (主地板)<br><code>lrvBorderFloor</code> (地板邊界)<br><code>lrvBorderWall</code>
+                        (牆面踢腳)<br><code>lrvBench</code> (障礙物)</td>
+                    <td>0.0 ~ 100.0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <h4>Contrast Computation Logic (對比運算核心):</h4>
+            <p>系統即時計算以下關鍵對比組，用於評估導盲路徑的有效性：</p>
+            <ul>
+                <li><strong>Floor vs Wall</strong>: 空間邊界辨識。</li>
+                <li><strong>Floor vs Border</strong>: 導引線辨識。</li>
+                <li><strong>Floor vs Bench</strong>: 障礙物偵測 (防撞)。</li>
+            </ul>
+        </div>
+
+        <!-- SCENE 3 -->
+        <h2>3. Scene 3: Signage Accessibility (標示可讀性設計)</h2>
+        <p>本場景基於 ADA 標準，驗證標示系統的可讀性 (Legibility) 與易讀性 (Readability)，支援動態尺寸與排版調整。</p>
+
+        <h3>3.1 Control Variables (控制變數)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">環境變數 (Variable)</th>
+                    <th style="width: 30%;">設計意義 (Significance)</th>
+                    <th style="width: 25%;">Unity 實作參數 (Script Param)</th>
+                    <th style="width: 20%;">數值範圍 (Range)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>安裝垂直高度<br>(Vertical Height)</strong></td>
+                    <td>模擬不同視線高度的需求，檢驗標示是否位於最佳視野範圍內。對應 ADA 安裝規範。</td>
+                    <td><code>heightCm</code> (Float)<br>Script: <code>SignageControllerS3.cs</code></td>
+                    <td>0 ~ 350 cm<br>(Center Height)</td>
+                </tr>
+                <tr>
+                    <td><strong>字體/圖標大小<br>(Character Height)</strong></td>
+                    <td>決定視覺張角 (Visual Angle)。系統依據 Reference Height 自動計算縮放比例 (Scale Ratio)。</td>
+                    <td><code>charHeightMm</code> (Input)<br><code>transform.localScale</code> (Unity)</td>
+                    <td>5 ~ 300 mm<br>(Scale: 0.1 ~ 6.0)</td>
+                </tr>
+                <tr>
+                    <td><strong>版面獨立對比<br>(Independent Contrast)</strong></td>
+                    <td>分別控制標示牌的三層結構：底牆、背板、文字，以確保文字與背景、背景與環境皆有足夠對比。</td>
+                    <td><code>wallLrv</code> (底牆)<br><code>boardLrv</code> (背板)<br><code>textLrv</code> (文字/圖標)</td>
+                    <td>0.0 ~ 100.0</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SCALE CALCULATION -->
+        <div class="highlight-box" style="background-color: #eaf2f8; border: 1px solid #a9cce3;">
+            <h4>📏 Scale Calibration Logic (尺寸縮放校正)</h4>
+            <p><strong>核心邏輯：</strong> 3D 模型原始尺寸 (Prefab) 是以「標準字高 <strong>50mm</strong>」製作的 (即 Scale = 1.0 時，字高為
+                5cm)。Unity 的縮放參數 (Local Scale) 依據使用者輸入的目標高度進行線性換算：</p>
+
+            <div class="math-block" style="background-color: #fff; padding: 10px; border-radius: 5px;">
+                <strong>Formula:</strong><br>
+                $$ \text{Unity Scale} = \frac{\text{Target Height (mm)}}{\text{Reference Height (50mm)}} $$
+            </div>
+
+            <p style="margin-top: 10px;"><strong>Unity Parameter Mapping (參數區間實例):</strong></p>
+            <ul>
+                <li><strong>Minimum (5mm):</strong> $$ \frac{5}{50} = 0.1 $$ (Scale)</li>
+                <li><strong>Default (50mm):</strong> $$ \frac{50}{50} = 1.0 $$ (Scale)</li>
+                <li><strong>Maximum (300mm):</strong> $$ \frac{300}{50} = 6.0 $$ (Scale)</li>
+            </ul>
+        </div>
+
+        <!-- TECHNICAL -->
+        <h2>4. Technical Implementation Details (技術實作原理與參數轉換)</h2>
+
+        <!-- KEY TAKEAWAY -->
+        <div class="highlight-box" style="border-left: 5px solid #e74c3c; background-color: #fadbd8;">
+            <h4 style="color: #c0392b; margin-top:0;">🔥 重點總結 (Key Takeaway)</h4>
+            <p><strong>在 Unity 中設定正確 LRV 的核心步驟：</strong></p>
+            <ol>
+                <li><strong>環境設定 (Environment)：</strong> 專案 Color Space 必須設為 <code>Linear</code>。</li>
+                <li><strong>參數設定 (Parameter)：</strong> 將材質 Base Color (RGB) 的三個數值直接設為 <code>LRV / 100</code>。</li>
+            </ol>
+            <p style="font-weight: bold; background-color: rgba(255,255,255,0.5); padding: 5px; border-radius: 3px;">
+                舉例：若油漆廠商標示 LRV = 72，你在 Unity 的材質顏色（Base Color）只需輸入 (0.72, 0.72, 0.72)，即可得到符合物理真實感的反射效果。
+            </p>
+        </div>
+
+        <p>本節說明物理參數如何轉換為 Unity 的渲染參數。所有轉換邏輯皆實作於場景對應的 Controller 腳本中。</p>
+
+        <h3>4.1 LRV & Computer Graphics Theory (LRV 與電腦圖學解釋)</h3>
+        <p>從電腦圖學 (Computer Graphics) 與輻射度學 (Radiometry) 的角度，本專案的 LRV 實作對應於 <strong>Physically Based Rendering
+                (PBR)</strong> 中的 <strong>Diffuse Albedo (漫反射反照率)</strong>。</p>
+
+        <div class="highlight-box">
+            <h4>📐 理論基礎 (Theoretical Basis):</h4>
+            <ul>
+                <li><strong>Physical Definition:</strong> LRV (Light Reflectance Value) 在物理上對應於 CIE XYZ 色彩空間中的 <strong>Y
+                        (Luminance Factor)</strong>。它代表表面反射的光通量與入射光通量的比率 (Ratio of Reflected Luminous Flux to Incident
+                    Flux)。</li>
+                <li><strong>Linear Space:</strong> Unity 的物理渲染管線 (HDR/Linear Workflow) 模擬光的物理疊加。在這個線性空間中，材質的 Base Color
+                    代表物體反射光線的能量百分比。</li>
+                <li><strong>Mapping:</strong> 由於 LRV 與 Unity Albedo 皆屬於線性物理量 (Linear Physical Quantity)，因此無需經過 Gamma 校正
+                    (如 sRGB 的 2.2 次方)，直接作為線性係數輸入 Rendering Equation。</li>
+            </ul>
+        </div>
+
+        <div class="math-block">
+            <strong>渲染方程式 (The Rendering Equation Simplified):</strong><br>
+            $$ L_o = \int ( \frac{\text{LRV}}{100} ) \times L_i \times (\omega \cdot n) \, d\omega $$
+            <p style="font-size: 0.9em; margin-top: 5px;">
+                其中 $\frac{\text{LRV}}{100}$ 即為材質的漫反射係數 ($k_d$ or diffuse albedo)。當 LRV=50 時，代表物體表面在物理上確實反射了 50% 的入射光能量。
+            </p>
+        </div>
+
+        <h3>4.1.2 Simplified Summary for Unity (Unity 參數設定精簡總結)</h3>
+        <p>若要將上述物理定義與色彩科學精簡為 Unity 操作中的具體參數，可以整理為以下三個核心重點：</p>
+
+        <h4>1. 核心參數對應表 (Core Mapping)</h4>
+        <p>在 Unity 的 Standard Shader 或 Lit Shader (URP/HDRP) 中，物理概念與參數的對應關係如下：</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>物理概念 (Physical Concept)</th>
+                    <th>Unity 參數項目 (Parameter)</th>
+                    <th>設定數值 / 格式 (Value/Format)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>LRV (0-100)</strong></td>
+                    <td><strong>Base Color (Albedo)</strong></td>
+                    <td>數值： $$ LRV \div 100 $$ (例如 LRV 50 → 0.5)</td>
+                </tr>
+                <tr>
+                    <td><strong>CIE Y (線性亮度)</strong></td>
+                    <td><strong>RGB 頻道模式</strong></td>
+                    <td>R, G, B 三者設定為相同數值 (灰階)</td>
+                </tr>
+                <tr>
+                    <td><strong>Luminous Flux Ratio</strong></td>
+                    <td><strong>Alpha (A)</strong></td>
+                    <td>設定： 1.0 (不透明)</td>
+                </tr>
+                <tr>
+                    <td><strong>Disable Specular (移除鏡面反射)</strong></td>
+                    <td><strong>Metallic Map</strong></td>
+                    <td>設定： <strong>0</strong> (不可調整)</td>
+                </tr>
+                <tr>
+                    <td><strong>Disable Gloss (移除光澤)</strong></td>
+                    <td><strong>Smoothness</strong></td>
+                    <td>設定： <strong>0</strong> (不可調整)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="note" style="background-color: #fce4ec; border-left: 5px solid #e91e63; padding: 10px;">
+            <strong>⚠️ 為什麼不可調整 Metallic 與 Smoothness？</strong><br>
+            LRV 僅定義物體的「漫反射」(Diffuse Reflection) 特性。若開啟 Metallic 或 Smoothness，物體表面會產生「鏡面反射」(Specular Highlight)
+            或「光澤」(Gloss)，導致觀測到的亮度受觀察角度影響，破壞純粹基於 LRV 的輝度對比計算 (Weber/Michelson Contrast)。因此，必須將兩者設為 0 以確保物理模擬的單純性。
+        </p>
+
+        <h4>2. 專案環境設定 (Project Settings)</h4>
+        <p>為了確保上述「直接除以 100」的邏輯成立，Unity 專案必須處於正確的色彩計算模式：</p>
+        <ul>
+            <li><strong>參數位置：</strong> <code>Edit > Project Settings > Player > Other Settings</code></li>
+            <li><strong>Color Space：</strong> <strong style="color:red;">必須設定為 Linear</strong> (而非 Gamma)。</li>
+            <li><strong>為什麼？</strong> 只有在 Linear 模式下，Unity 才會將 0.5 的數值視為 50% 的物理反射能量。如果在 Gamma 模式，0.5 會因為經過曲線校正而導致亮度偏差。
+            </li>
+        </ul>
+
+        <h4>3. Shader 中的具體輸入</h4>
+        <p>如果你是在撰寫 Shader Graph 或 C# Script，參數精簡後的邏輯即為：</p>
+        <ul>
+            <li><strong>Shader Property：</strong> 使用 Color 屬性，並在 Color Picker 中選擇 HDR 或確保輸出為 Linear。</li>
+            <li><strong>計算公式：</strong>
+                <div class="math-block" style="padding:5px; margin:5px 0;">
+                    $$ \text{Unity Albedo (Linear RGB)} = \frac{\text{LRV}}{100} $$
+                </div>
+            </li>
+            <li><strong>結果：</strong> 將得到的浮點數直接填入 <code>_BaseColor</code> 或 <code>_MainTex_Tint</code>。</li>
+        </ul>
+
+        <div class="highlight-box">
+            <h4>🚀 簡化總結 (Quick Guide)</h4>
+            <p>在 Unity 中模擬 LRV 的「標準動作」只需兩步：</p>
+            <ol>
+                <li><strong>環境：</strong> 確保 <code>Color Space = Linear</code>。</li>
+                <li><strong>材質：</strong> 將 Base Color (RGB) 的三個數值都設為 <code>LRV / 100</code>。</li>
+            </ol>
+            <p><strong>舉例：</strong>若油漆廠商標示 LRV = 72，你在 Unity 的材質顏色（Base Color）只需輸入
+                <code>(0.72, 0.72, 0.72)</code>，即可得到符合物理真實感的反射效果。
+            </p>
+        </div>
+
+        <p><strong>代碼驗證 (Theory Verification):</strong></p>
+        <pre><code>// 1. LRV is CIE Y (0-100), a linear measure of reflectance.
+float linearAlbedo = lrv / 100f; 
+
+// 2. Assign directly to Linear RGB channels.
+// We do NOT use Mathf.Pow(val, 2.2f) because LRV is not perceptual Lightness (L*).
+Color albedoColor = new Color(linearAlbedo, linearAlbedo, linearAlbedo, 1f);</code></pre>
+
+        <h3>4.1.1 Actual Code Implementation (專案實作邏輯)</h3>
+        <p>為了在 Runtime 高效更新大量材質而不造成 Memory Leak (如建立過多材質實例)，本專案使用 <code>MaterialPropertyBlock</code> 技術。以下是
+            <code>ContrastController.cs</code> 中的完整實作：
+        </p>
+
+        <pre><code class="language-csharp">private MaterialPropertyBlock propBlock;
+// Shader Property IDs (Cached for performance)
+private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
+private void SetMaterialColor(List&lt;Renderer&gt; renderers, float lrv)
+{
+    if (renderers == null) return;
+    
+    // Lazy Initialization
+    if (propBlock == null) propBlock = new MaterialPropertyBlock();
+
+    // 1. Calculate Linear Color from LRV
+    float linearVal = Mathf.Clamp01(lrv / 100f);
+    Color color = new Color(linearVal, linearVal, linearVal, 1f);
+
+    foreach (var r in renderers)
+    {
+        if (r == null) continue;
+        
+        // 2. Get existing block to preserve other properties
+        r.GetPropertyBlock(propBlock);
+        
+        // 3. Update only the Color property
+        propBlock.SetColor(BaseColorId, color);
+        
+        // 4. Apply back to Renderer
+        r.SetPropertyBlock(propBlock);
+    }
+}</code></pre>
+
+        <h3>4.2 Lux to Light Intensity (照度與光強轉換)</h3>
+        <p>Unity 的 <code>Light.intensity</code> 單位並非直接等於 Lux，且深受光源類型 (Point vs Spot) 與距離衰減 (Inverse Square Law)
+            影響。因此，我們引入一個 **校正係數 (Intensity Factor)**，將物理照度目標值 (Em) 線性轉換為 Unity 光強度。</p>
+
+        <div class="math-block">
+            <strong>轉換公式 (Formula):</strong><br>
+            $$ \text{Unity Intensity} = \text{Em (Lux)} \times \text{Factor}_{\text{scene}} $$
+        </div>
+
+        <p><strong>場景係數設定 (Scene-Specific Calibration):</strong></p>
+        <ul>
+            <li><strong>Scene 1 (Stairway):</strong> 使用多盞 Point Light 模擬均勻照明。
+                <br><code>Factor = 0.1</code> (Script: <code>ContrastController.cs</code>)
+            </li>
+            <li><strong>Scene 2 (Corridor):</strong> 使用 Spot Light 聚焦照明。
+                <br><code>Factor = 0.005</code> (Script: <code>ContrastControllerS2.cs</code>)
+            </li>
+        </ul>
+
+        <p><strong>代碼實作 (Code Implementation):</strong></p>
+        <pre><code>// 範例來源: ContrastControllerS2.cs
+private void UpdateLighting()
+{
+    // emLux 為使用者調整的目標照度 (如 300 Lux)
+    // intensityFactor 為場景特定的校正參數 (如 0.005)
+    float finalIntensity = emLux * intensityFactor;
+
+    foreach (var light in targetLights)
+    {
+        light.intensity = finalIntensity;
+    }
+}</code></pre>
+
+        <div class="highlight-box" style="background-color: #e8f8f5; border: 1px solid #a3e4d7;">
+            <h4>🔢 計算範例 (Calculation Example)</h4>
+            <p>假設使用 Point Light 且校正係數為 <strong>0.03</strong> (Factor = 0.03)：</p>
+            <ul>
+                <li><strong>情境：</strong> 將環境照度 (Lux) 從 0 lx 調整至 1000 lx。</li>
+                <li><strong>計算：</strong>
+                    <ul>
+                        <li>Min: $$ 0 \times 0.03 = 0 $$</li>
+                        <li>Max: $$ 1000 \times 0.03 = 30 $$</li>
+                    </ul>
+                </li>
+                <li><strong>結果：</strong> Unity Inspector 中的 Light Intensity 數值範圍將會是 <strong>0 ~ 30</strong>。</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <h4>💡 Why Factors Differ? (為何係數不同?)</h4>
+            <p>係數差異來自於光源的物理特性模擬：Scene 1 的 Point Light 向全方位發散，能量衰減快，因此需要較高的係數 (0.1) 才能在地面維持目標照度；Scene 2 的 Spot Light
+                光束集中，能量利用率高，因此係數較低 (0.005)。這些數值是透過數位光度計校正後得出的經驗值。</p>
+        </div>
+
+</body>
+
+</html>

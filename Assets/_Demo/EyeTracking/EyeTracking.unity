@@ -284,7 +284,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0, g: 0, b: 1, a: 1}
-    - _Color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    - _Color: {r: 0, g: 0, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!1 &43762429
@@ -1522,7 +1522,7 @@ MonoBehaviour:
   maxRayDistance: 20
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967039
+    m_Bits: 119
   xrOrigin: {fileID: 404488544}
 --- !u!21 &1698403215
 Material:
@@ -1577,7 +1577,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 0, b: 0, a: 1}
-    - _Color: {r: 0, g: 1, b: 0, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!1 &1721353978
@@ -1631,7 +1631,7 @@ MonoBehaviour:
   maxRayDistance: 20
   hitLayers:
     serializedVersion: 2
-    m_Bits: 4294967039
+    m_Bits: 119
   xrOrigin: {fileID: 404488544}
 --- !u!1 &1778349661
 GameObject:

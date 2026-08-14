@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青光眼模擬系統技術文件 (Glaucoma Simulation Technical Documentation)</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", "Segoe UI", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f9f9f9;
+        }
+
+        .document-container {
+            background-color: white;
+            padding: 50px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-top: 40px;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+
+        h4 {
+            color: #34495e;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+            color: #c7254e;
+        }
+
+        .math-block {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+
+        .highlight-box {
+            background-color: #f0f7fb;
+            padding: 20px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .param-box {
+            background-color: #fff8e1;
+            padding: 15px;
+            border-left: 4px solid #f1c40f;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        th,
+        td {
+            border: 1px solid #e1e8ed;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .img-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .img-caption {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="document-container">
+
+        <h1>Glaucoma Simulation System<br><small style="font-size: 0.6em; color: #7f8c8d;">青光眼模擬系統技術架構書</small></h1>
+
+        <div
+            style="background-color: #eef9f0; padding: 15px; border-radius: 5px; border: 1px solid #c3e6cb; color: #155724; margin-bottom: 30px;">
+            <strong>文件摘要：</strong> 本文檔詳細說明了青光眼模擬系統的視覺渲染邏輯、臨床病理模擬機制，以及基於眼動追蹤的幾何投影數學模型。
+        </div>
+
+        <!-- SECTION 1 -->
+        <h2>1. Visual Simulation Model (視覺模擬模型)</h2>
+        <p>本系統的核心目標是提供符合臨床特徵的視覺體驗。透過 Shader 逐像素運算，我們模擬了視網膜神經節細胞 (RGC) 受損後的三大主要視覺徵狀。</p>
+
+        <h3>1.1 Clinical Features & Graphics Implementation (臨床特徵與影像實作對照)</h3>
+        <p>下表詳細列出了低視力臨床特徵與 Unity 內部的對應實作方式：</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%;">臨床功能性特徵 (Clinical Feature)</th>
+                    <th style="width: 30%;">病理描述 (Description)</th>
+                    <th style="width: 25%;">CG 影像處理技術 (Graphics Technique)</th>
+                    <th style="width: 25%;">Unity 實作參數 (Shader Param)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>中心有效視野<br>(Effective Central Field)</strong><br><br><span
+                            style="color:#2c3e50; font-weight:bold;">Effective FOV: 20°</span></td>
+                    <td>青光眼典型特徵。雖然周邊視野逐漸喪失，但<strong>中心視野</strong>通常完整保留且有效。此殘餘的中心視力為定義「低視力」與評估視覺功能的關鍵指標。</td>
+                    <td><strong>Field Masking (視野遮罩)</strong><br>由 <code>FieldGenerator</code> 動態生成黑白遮罩紋理。</td>
+                    <td><code>_SensitivityMap</code> (Tex2D)<br>Generated by: <code>GlaucomaFieldGenerator.cs</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>缺損區/暗點<br>(Scotoma)</strong></td>
+                    <td>視網膜神經壞死導致的盲區。<br>分為「絕對暗點」(完全無光感) 與「相對暗點」(模糊或光感下降)。</td>
+                    <td><strong>Pixel Shader Filtering</strong><br>依據 Mode 切換像素輸出邏輯。</td>
+                    <td>
+                        <strong>Mode A (Absolute):</strong><br>Output Black (RGB 0,0,0)<br><br>
+                        <strong>Mode B (Relative):</strong><br>Blur + Darkening + Desaturation
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>病變過渡區<br>(Transition Zone)</strong></td>
+                    <td>病灶周圍並非銳利邊界，而是呈現漸層擴散的模糊帶。反應神經節細胞 (RGC) 逐漸凋亡的過程。</td>
+                    <td><strong>Alpha Blending / Gradient</strong><br>在遮罩紋理中繪製灰階漸層。</td>
+                    <td>
+                        <strong>Standard:</strong> 20°~20.1° (Diameter)<br>
+                        <strong>Realistic:</strong> 20°~30° (Diameter)<br>(Controlled by Vertex Generation)
+                    </td>
+                </tr>
+                <tr>
+                    <!-- Combined Row for Light & Contrast -->
+                    <td><strong>光敏感與對比降低<br>(Light & Contrast Loss)</strong></td>
+                    <td>除了視野範圍縮小，患者常伴隨整體的對比敏感度下降與光閥值升高 (連同有效視野區域)。</td>
+                    <td><strong>Color Grading (色彩校正)</strong><br>Multiply (亮度衰減) & Lerp (飽和度降低)。</td>
+                    <td>
+                        <code>_PeripheralDarkness</code><br>(Brightness Factor)<br><br>
+                        <code>_Desaturation</code><br>(Grayscale Factor)
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>1.2 Rendering Strategies (渲染呈現方案 & 病理模擬)</h3>
+        <p>針對不同應用場景 (如臨床視野測試 vs. 患者日常體驗模擬)，系統提供了兩種可切換的渲染模式：</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Option A: Total Blackout (全黑模式)</th>
+                    <th style="width: 50%;">Option B: Blur Sampling (相對缺損模式)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <!-- Option A Content -->
+                    <td>
+                        <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#c0392b;">Shader Mode
+                            1</div>
+                        <ul>
+                            <li><strong>臨床定義</strong>：模擬 <strong>絕對視野缺損 (Absolute Scotoma)</strong>，即該區域完全喪失感光能力。</li>
+                            <li><strong>視覺效果</strong>：周邊區域強制輸出純黑色 (RGB 0,0,0)。</li>
+                            <li><strong>優勢</strong>：運算極快 (O(1))，適合標準自動化視野檢查 (SAP) 的模擬。</li>
+                        </ul>
+                    </td>
+
+                    <!-- Option B Content -->
+                    <td>
+                        <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:#27ae60;">Shader Mode
+                            4</div>
+                        <ul>
+                            <li><strong>臨床定義</strong>：模擬 <strong>相對視野缺損 (Relative Scotoma)</strong>，與大腦的「填補效應
+                                (Filling-in)」。視力模糊且光感下降，但非全黑。</li>
+                            <li><strong>視覺效果</strong>：採用 <strong>黃金螺旋 (Golden Spiral)</strong> 演算法進行 30~80 次採樣，產生高品質散景
+                                (Bokeh)。</li>
+                            <li><strong>優勢</strong>：高度擬真，適合展示患者真實的主觀視覺感受。</li>
+                        </ul>
+
+                        <div
+                            style="margin-top: 20px; padding: 10px; background-color: #eafaf1; border: 1px solid #27ae60; border-radius: 4px; font-size: 0.9em;">
+                            <strong>Clinical Pathologies (Option B 專屬病理特效):</strong>
+                            <p style="margin: 5px 0;">Shader 在此模式下會額外施加 RGC 受損特徵：</p>
+                            <ol style="padding-left: 20px; margin-bottom: 0;">
+                                <li><strong>Contrast Reduction (對比敏感度降低)</strong>:
+                                    <br><code>blurCol = lerp(blurCol, grayscale, _Desaturation);</code>
+                                    <br>現象：周邊視野飽和度下降，趨於灰階。
+                                </li>
+                                <li style="margin-top: 5px;"><strong>Light Sensitivity Attenuation (光敏感度衰減)</strong>:
+                                    <br><code>blurCol *= (1.0 - _PeripheralDarkness);</code>
+                                    <br>現象：光閾值升高，視野邊緣變暗。
+                                </li>
+                            </ol>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SECTION 2 -->
+        <h2>2. Geometric Projection System (幾何投影系統)</h2>
+        <p>為了在 VR 頭盔中精確呈現如「20度管狀視野」的臨床定義，本系統建立了一套嚴謹的幾何投影模型，將 3D 眼動訊號映射至 2D 平面。</p>
+
+        <h3>2.1 Binocular Projection Diagram (投影原理圖解)</h3>
+        <p>下圖展示了凝視射線 (Gaze Ray) 如何穿透定義了視野範圍的濾鏡層 (Filter Layer) 並聚焦於 3D 場景。</p>
+
+        <div class="img-container">
+            <img src="glaucoma_projection_diagram.png" alt="Binocular Gaze Projection Diagram">
+            <div class="img-caption">Figure 1. 雙眼凝視訊號穿透 110度 FOV 濾鏡層之投影示意圖</div>
+        </div>
+
+        <div class="highlight-box">
+            <h4>圖解核心分析：</h4>
+            <ol>
+                <li><strong>Filter Layer as Retinal Map</strong>: 中間的 2D 平面 (Filter Layer) 實際上模擬了視網膜的敏感度分佈。</li>
+                <li><strong>Angular Fidelity (角保真度)</strong>: 無論 VR 頭盔的物理螢幕距離眼睛多遠，系統透過 <strong>Rectilinear Projection
+                        (直線投影)</strong> 公式，確保濾鏡上的每個像素點都對應正確的視角 \(\theta\)。</li>
+                <li><strong>Binocular Fusion</strong>: 左眼與右眼擁有獨立的 Filter Layer (由 Shader 分別處理
+                    <code>_GazeCenterLeft/Right</code>)，這允許模擬雙眼視野不對稱的真實情況。
+                </li>
+            </ol>
+        </div>
+
+        <h3>2.2 Sensitivity Transition Logic (病變過渡區邏輯)</h3>
+        <p>真實的青光眼視野缺損並非如「管狀視野」般邊緣銳利，而是存在一個病變過渡區 (Transition Zone)。本系統在 <code>GlaucomaFieldGenerator.cs</code>
+            中實作了兩種擬真度模式，其敏感度 \(S\) 隨半徑 \(r\) 的變化遵循特定的衰減函數。</p>
+
+        <table style="margin-top:10px;">
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Mode A: Standard (Demonstration)</th>
+                    <th style="width: 50%;">Mode B: High Fidelity (Realistic)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <ul style="padding-left:20px;">
+                            <li><strong>特徵</strong>：銳利邊緣 (Sharp Edge)。</li>
+                            <li><strong>邏輯</strong>：在 <strong>20°~20.1° (直徑)</strong> 極窄範圍內，敏感度瞬間從 1.0 降至 0.0。</li>
+                            <li><strong>用途</strong>：適合教學示範，明確展示「20度管狀視野」的定義邊界。</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul style="padding-left:20px;">
+                            <li><strong>特徵</strong>：柔邊漸層 (Soft Gradient)。</li>
+                            <li><strong>邏輯</strong>：將 <strong>20°~30° (直徑)</strong> 定義為過渡區，切分為 <strong>21 個敏感度階層
+                                    (Sensitivity Levels)</strong>，線性衰減 (1.0 \(\to\) 0.0)。</li>
+                            <li><strong>用途</strong>：模擬真實患者視神經逐漸萎縮的模糊邊界，提供最接近臨床的主觀體驗。</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="img-container">
+            <img src="glaucoma_transition_modes.png" alt="Comparison of Glaucoma Sensitivity Transition Modes">
+            <div class="img-caption">Figure 2. 兩種敏感度過渡模式之視覺與邏輯比較圖 (Left: Sharp Edge, Right: Soft Gradient)</div>
+        </div>
+
+        <h3>2.3 Mathematical Model (數學模型)</h3>
+
+        <h4>A. 3D World to 2D Screen (注視點投影)</h4>
+        <p>將眼動儀捕捉到的 3D 注視點 \(P_{world}\) 轉換為螢幕上的 UV 座標 \((u,v)\)：</p>
+        <div class="math-block">
+            $$ P_{clip} = M_{proj} \cdot M_{view} \cdot P_{world} $$
+            $$ [u, v]^T = 0.5 \cdot (P_{clip}.xy / P_{clip}.w) + 0.5 $$
+        </div>
+
+        <h4>B. Visual Field Mapping (視野角度映射)</h4>
+        <p>計算濾鏡紋理上，距離中心半徑為 \(r_{uv}\) 的一點，其代表的真實視角 \(\theta\)：</p>
+        <div class="math-block">
+            $$ \theta = \arctan \left( r_{uv} \cdot \tan\left(\frac{FOV_{ref}}{2}\right) \right)
+            $$
+        </div>
+        <p>其中 \(FOV_{ref}\) 設為 110° (對應 VR 頭盔規格)。此公式保證了軟體生成的「20度缺損」在光學上是準確的。</p>
+
+        <h4>C. Gradient Falloff Model (過渡區衰減模型)</h4>
+        <p>針對 Realistic Mode 的過渡區，敏感度 \(S(\theta)\) 定義為線性插值函數 (Lerp)：</p>
+        <div class="math-block">
+            $$ S(\theta) =
+            \begin{cases}
+            1.0 & \text{if } \theta < \theta_{start} \\ 1.0 - \frac{\theta - \theta_{start}}{\theta_{end} -
+                \theta_{start}} & \text{if } \theta_{start} \le \theta \le \theta_{end} \\ 0.0 & \text{if } \theta>
+                \theta_{end}
+                \end{cases}
+                $$
+        </div>
+        <p>其中 \(\theta_{start}\) 為內徑邊界 (10°)，\(\theta_{end}\) 為外徑邊界 (15°)，對應 20°~30° 直徑範圍。</p>
+
+
+
+        <!-- SECTION 3 -->
+        <h2>3. System Architecture (系統架構與實作)</h2>
+        <p>本系統基於 Unity 元件架構設計，主要由以下三個模組構成：</p>
+
+        <ul>
+            <li><strong>Controller (<code>GlaucomaRenderer.cs</code>)</strong>
+                <br>系統中樞，負責串接硬體輸入 (Gaze Tracker) 與視覺輸出 (Material)。每幀更新 Shader 參數。
+            </li>
+            <li><strong>Field Generator (<code>GlaucomaFieldGenerator.cs</code>)</strong>
+                <br>數據工廠，負責利用上述數學公式生成 <code>Sensitivity Map</code> (RGB 紋理)。支援動態調整視野範圍 (如從 10度擴大至 30度)。
+            </li>
+            <li><strong>Shader Core (<code>GlaucomaOverlay.shader</code>)</strong>
+                <br>渲染核心，實作了所有的模糊算法、色彩處理與混合邏輯。
+            </li>
+        </ul>
+
+    </div>
+
+</body>
+
+</html>
