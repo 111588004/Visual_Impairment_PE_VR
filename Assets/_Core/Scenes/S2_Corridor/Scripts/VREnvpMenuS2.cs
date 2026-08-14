@@ -4,10 +4,10 @@ using UnityEngine.InputSystem;
 
 namespace VISimulation
 {
-    public class VRContrastMenuS2 : MonoBehaviour
+    public class VREnvpMenuS2 : MonoBehaviour
     {
         [Header("References")]
-        public ContrastControllerS2 contrastController;
+        public EnvpControllerS2 contrastController;
         public GameObject menuCanvas;
         
         // Don't disable the script itself, toggle this canvas component
@@ -54,7 +54,7 @@ namespace VISimulation
         {
             if (contrastController == null)
             {
-                contrastController = FindFirstObjectByType<ContrastControllerS2>();
+                contrastController = FindFirstObjectByType<EnvpControllerS2>();
             }
             
             if (menuCanvas != null)

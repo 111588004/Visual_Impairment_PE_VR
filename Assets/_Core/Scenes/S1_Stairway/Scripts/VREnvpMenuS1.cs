@@ -4,10 +4,10 @@ using UnityEngine.InputSystem;
 
 namespace VISimulation
 {
-    public class VRContrastMenu : MonoBehaviour
+    public class VREnvpMenuS1 : MonoBehaviour
     {
         [Header("References")]
-        public ContrastController contrastController;
+        public EnvpController contrastController;
         public GameObject menuCanvas; // The Canvas GameObject to toggle
 
         [Header("UI Sliders")]
@@ -75,7 +75,7 @@ namespace VISimulation
         {
             if (contrastController == null)
             {
-                contrastController = FindFirstObjectByType<ContrastController>();
+                contrastController = FindFirstObjectByType<EnvpController>();
             }
 
             if (contrastController != null)

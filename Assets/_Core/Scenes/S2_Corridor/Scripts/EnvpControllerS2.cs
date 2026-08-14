@@ -3,39 +3,39 @@ using UnityEngine;
 
 namespace VISimulation
 {
-    public class ContrastControllerS2 : MonoBehaviour, ISimulationController
+    public class EnvpControllerS2 : MonoBehaviour, ISimulationController
     {
         [Header("Scene 2 Lighting Control")]
         [Range(0, 1000)] public float emLux = 300f; // Global Illuminance target
         public float intensityFactor = 0.03f; // Factor to convert Lux to Unity Intensity
         
         [Header("Target Lights (Optional)")]
-        public Transform lightParent; // Parent object containing lights
+        public GameObject lightParent; // Parent object containing lights
         public List<Light> targetLights = new List<Light>();
 
         [Header("Object 1: Floor (地板)")]
         [Range(0, 100)] public float lrvFloor = 45f;
-        public Transform floorParent;
+        public GameObject floorParent;
         public List<Renderer> floorRenderers = new List<Renderer>();
 
         [Header("Object 2: Border Floor (邊界_靠地)")]
         [Range(0, 100)] public float lrvBorderFloor = 10f;
-        public Transform borderFloorParent;
+        public GameObject borderFloorParent;
         public List<Renderer> borderFloorRenderers = new List<Renderer>();
 
         [Header("Object 3: Border Wall (邊界_靠牆)")]
         [Range(0, 100)] public float lrvBorderWall = 10f;
-        public Transform borderWallParent;
+        public GameObject borderWallParent;
         public List<Renderer> borderWallRenderers = new List<Renderer>();
 
         [Header("Object 4: Wall (牆面)")]
         [Range(0, 100)] public float lrvWall = 80f;
-        public Transform wallParent;
+        public GameObject wallParent;
         public List<Renderer> wallRenderers = new List<Renderer>();
 
         [Header("Object 5: Bench (板凳)")]
         [Range(0, 100)] public float lrvBench = 30f;
-        public Transform benchParent;
+        public GameObject benchParent;
         public List<Renderer> benchRenderers = new List<Renderer>();
         
         [Header("Calculated Contrast (Theory)")]
@@ -90,7 +90,7 @@ namespace VISimulation
         public void ApplyVariant(SimulationVariantData variant)
         {
             if (variant == null) return;
-            Debug.Log($"[ContrastControllerS2] Applying Variant: {variant.variantName}");
+            Debug.Log($"[EnvpControllerS2] Applying Variant: {variant.variantName}");
 
             var fl = variant.GetParameter("FloorLRV");
             if (fl != null) lrvFloor = fl.value;
@@ -116,7 +116,7 @@ namespace VISimulation
 
             UpdateAll();
 
-            var menu = FindFirstObjectByType<VRContrastMenuS2>();
+            var menu = FindFirstObjectByType<VREnvpMenuS2>();
             if (menu != null) menu.InitializeUI();
         }
 
@@ -143,7 +143,7 @@ namespace VISimulation
             SetMaterialColor(borderFloorRenderers, lrvBorderFloor);
             
             // Special Case for Skirting (Border Wall): Hide if explicitly disabled in variant
-            if (borderWallParent != null) borderWallParent.gameObject.SetActive(skirtingEnabled);
+            if (borderWallParent != null) borderWallParent.SetActive(skirtingEnabled);
             if (skirtingEnabled) SetMaterialColor(borderWallRenderers, lrvBorderWall);
 
             SetMaterialColor(wallRenderers, lrvWall);
@@ -203,15 +203,15 @@ namespace VISimulation
              PopulateLights(lightParent, ref targetLights, true);
         }
 
-        private void PopulateRenderers(Transform parent, ref List<Renderer> list, bool forceClear = false)
+        private void PopulateRenderers(GameObject parent, ref List<Renderer> list, bool forceClear = false)
         {
             if (forceClear || list == null) list = new List<Renderer>();
             if (parent == null) return;
             var rends = parent.GetComponentsInChildren<Renderer>(true);
             foreach (var r in rends) if (!list.Contains(r)) list.Add(r);
         }
-        
-        private void PopulateLights(Transform parent, ref List<Light> list, bool forceClear = false)
+
+        private void PopulateLights(GameObject parent, ref List<Light> list, bool forceClear = false)
         {
              if (forceClear || list == null) list = new List<Light>();
              if (parent == null) return;

@@ -4,33 +4,34 @@ using System.Collections.Generic;
 namespace VISimulation
 {
     [ExecuteAlways]
-    public class ContrastController : MonoBehaviour, ISimulationController
+    public class EnvpController : MonoBehaviour, ISimulationController
     {
-        [Header("Target Object Groups (Drag Parent for Auto-Fill)")]
-        public GameObject nosingParent;
-        public GameObject treadParent;
-        public GameObject wallParent;
-
-        [Header("Target Renderers List")]
-        public List<Renderer> nosingRenderers = new List<Renderer>();
-        public List<Renderer> treadRenderers = new List<Renderer>();
-        public List<Renderer> wallRenderers = new List<Renderer>();
-
-        [Header("Lighting Group (Drag Parent for Auto-Fill)")]
-        public GameObject lightParent;
-        public List<Light> targetLights = new List<Light>();
-        
+        [Header("Scene 1 Lighting Control")]
         [Tooltip("Environment Illuminance in Lux (Em)")]
-        [Min(0)]
+        [Range(0, 1000)]
         public float emLux = 300f;
         [Tooltip("Conversion Factor: Lux to Point Light Intensity. Adjust this until the scene brightness looks correct (~0.03).")]
         public float intensityFactor = 0.03f;
 
-        [Header("LRV Settings (0-100 CIE Y)")]
+        [Header("Target Lights (Optional)")]
+        public GameObject lightParent;
+        public List<Light> targetLights = new List<Light>();
+
+        [Header("Object 1: Nosing (樓梯突緣)")]
         [Range(0, 100)] public float lrvNosing = 50f;
+        public GameObject nosingParent;
+        public List<Renderer> nosingRenderers = new List<Renderer>();
+
+        [Header("Object 2: Tread (踏板)")]
         [Range(0, 100)] public float lrvTread = 30f;
+        public GameObject treadParent;
+        public List<Renderer> treadRenderers = new List<Renderer>();
+
+        [Header("Object 3: Wall (牆面)")]
         [Range(0, 100)] public float lrvWall = 70f;
-        
+        public GameObject wallParent;
+        public List<Renderer> wallRenderers = new List<Renderer>();
+
         [Header("Advanced")]
         [Tooltip("Uncheck if Wall colors don't update (Forces material instance modification).")]
         public bool usePropertyBlock = true;
@@ -121,7 +122,7 @@ namespace VISimulation
         public void ApplyVariant(SimulationVariantData variant)
         {
             if (variant == null) return;
-            Debug.Log($"[ContrastController] Applying Variant: {variant.variantName}");
+            Debug.Log($"[EnvpController] Applying Variant: {variant.variantName}");
 
             var nx = variant.GetParameter("NosingLRV");
             if (nx != null) 
@@ -144,7 +145,7 @@ namespace VISimulation
             CalculateContrast();
 
             // Refresh VR Menu if it exists
-            var menu = FindFirstObjectByType<VRContrastMenu>();
+            var menu = FindFirstObjectByType<VREnvpMenuS1>();
             if (menu != null) menu.InitializeUI();
         }
 
