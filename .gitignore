@@ -66,3 +66,13 @@ crashlytics-build.properties
 
 # Local Build Folders
 .utmp/
+
+# Scratch analysis scripts / tech docs (not part of the Unity project)
+*.ps1
+*.py
+*_tech_doc.html
+*_tech_doc.md
+*.xlsx
+find_recent_cs.py
+glaucoma_projection_diagram.png
+glaucoma_transition_modes.png
