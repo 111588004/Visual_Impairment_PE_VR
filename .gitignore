@@ -88,3 +88,6 @@ diag_maincam.png
 
 # Claude Code local config
 /.claude/
+
+# Third-party paid/commercial asset packages (license prohibits redistribution)
+/[Aa]ssets/_ThirdParty/
