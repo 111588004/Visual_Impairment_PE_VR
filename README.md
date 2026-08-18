@@ -103,13 +103,6 @@ The Pelli-Robson chart doubles as the contrast-sensitivity calibration reference
 - [`EnvP_Lux_Exposure.cs`](Assets/_Demo/EnvP_Lux/EnvP_Lux_Exposure.cs) — exposure adjustment
 - [`EnvP_Pos.cs`](Assets/_Demo/EnvP_Pos/EnvP_Pos.cs) — object position adjustment
 
-<p align="center">
-  <img src="docs/images/fig3.05_envp-illustration-a.svg" alt="Environment perception demo illustration A" width="32%">
-  <img src="docs/images/fig3.06_envp-illustration-b.svg" alt="Environment perception demo illustration B" width="32%">
-  <img src="docs/images/fig3.07_envp-illustration-c.svg" alt="Environment perception demo illustration C" width="32%">
-</p>
-<p align="center"><img src="docs/images/fig5.02_envp-parameter-manipulation.svg" alt="EnvP environment parameter manipulation" width="80%"></p>
-
 ## Usage: VR controls & scene/task switching
 
 <p align="center">
