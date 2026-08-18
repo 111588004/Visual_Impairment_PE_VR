@@ -7,8 +7,7 @@
 <p align="center">VR/AR visual impairment simulation project built in Unity (URP). Simulates various visual impairment conditions in immersive scenarios for perception/accessibility research.</p>
 
 <p align="center">
-  <img src="docs/images/fig3.08_low-vision-perception-scenario.svg" alt="Low-vision perception scenario overview" width="49%">
-  <img src="docs/images/fig6.05_three-scenes-vr-immersive-env.svg" alt="Three scenes in VR immersive environment" width="49%">
+  <img src="docs/images/fig-hero-pcvr-headset-setup.png" alt="PCVR headset test setup" width="90%">
 </p>
 
 ## Scenes
@@ -18,6 +17,12 @@
 - **S3 – Interior Signage Profile**: Indoor wayfinding and signage
 - **VC1 – VSCS Profile (Cataract)**: Cataract simulation, Pelli-Robson contrast chart
 - **VC2 – VF Profile (Glaucoma)**: Visual field loss / glaucoma simulation
+
+<p align="center">
+  <img src="docs/images/fig-scene-s1_stairway.png" alt="S1 Stairway in-headset stereo view" width="32%">
+  <img src="docs/images/fig-scene-s2_corridor.png" alt="S2 Corridor in-headset stereo view" width="32%">
+  <img src="docs/images/fig-scene-s3_interior_signage.png" alt="S3 Interior Signage in-headset stereo view" width="32%">
+</p>
 
 ## Project structure
 
@@ -107,7 +112,12 @@ The Pelli-Robson chart doubles as the contrast-sensitivity calibration reference
 
 ## Usage: VR controls & scene/task switching
 
-<p align="center"><img src="docs/images/fig5.03_vr-controller-mapping.svg" alt="VR controller function mapping" width="49%"><img src="docs/images/fig5.04_scene-task-switch-panel.svg" alt="Scene/task switch panel operation" width="49%"></p>
+<p align="center">
+  <img src="docs/images/fig5.03_vr-controller-mapping.svg" alt="VR controller function mapping" width="70%">
+</p>
+<p align="center">
+  <img src="docs/images/fig5.04_scene-task-switch-panel.svg" alt="Scene/task switch panel operation" width="70%">
+</p>
 
 - **Controller mapping**: how each VR controller button/joystick maps to interaction, menu navigation, and parameter adjustment.
 - **Scene/task switching**: how the VR menu panel (driven by [`SceneNavigationManager.cs`](Assets/_Core/Scripts/Common/SceneNavigationManager.cs) and [`SimulationVariantSelector.cs`](Assets/_Core/Scripts/Common/SimulationVariantSelector.cs)) is used to switch between scenes and simulation tasks at runtime.
