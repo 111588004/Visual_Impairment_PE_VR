@@ -603,6 +603,28 @@ MonoBehaviour:
   targetOpenXRApiVersion: 
   required: 0
   customRuntimeLoaderName: 
+--- !u!114 &-1537535061697917952
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbaee0f913d1c6249bcdf61771539380, type: 3}
+  m_Name: FixNoVisibleAreaMesh Android
+  m_EditorClassIdentifier: Assembly-CSharp::UnityEngine.XR.OpenXR.Features.FixNoVisibleAreaMesh
+  m_enabled: 0
+  nameUi: Fix No Visible Area Mesh
+  version: 0.0.1
+  featureIdInternal: com.stresslevelzero.fixnovisiblemesh
+  openxrExtensionStrings: XR_KHR_visibility_mask
+  company: Stress Level Zero
+  priority: 0
+  targetOpenXRApiVersion: 
+  required: 0
+  customRuntimeLoaderName: 
 --- !u!114 &-1404901525433923832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -963,6 +985,28 @@ MonoBehaviour:
   featureIdInternal: com.unity.openxr.feature.input.microsoftmotioncontroller
   openxrExtensionStrings: 
   company: Unity
+  priority: 0
+  targetOpenXRApiVersion: 
+  required: 0
+  customRuntimeLoaderName: 
+--- !u!114 &1305743151215358526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbaee0f913d1c6249bcdf61771539380, type: 3}
+  m_Name: FixNoVisibleAreaMesh Standalone
+  m_EditorClassIdentifier: Assembly-CSharp::UnityEngine.XR.OpenXR.Features.FixNoVisibleAreaMesh
+  m_enabled: 0
+  nameUi: Fix No Visible Area Mesh
+  version: 0.0.1
+  featureIdInternal: com.stresslevelzero.fixnovisiblemesh
+  openxrExtensionStrings: XR_KHR_visibility_mask
+  company: Stress Level Zero
   priority: 0
   targetOpenXRApiVersion: 
   required: 0
@@ -1491,6 +1535,7 @@ MonoBehaviour:
   - {fileID: 7139259212408960652}
   - {fileID: 364257925741775121}
   - {fileID: -275515241889144915}
+  - {fileID: -1537535061697917952}
   - {fileID: 3799398655342817598}
   - {fileID: -8549961133329293418}
   - {fileID: 4879988109523539333}
@@ -1797,6 +1842,7 @@ MonoBehaviour:
   - {fileID: -524636137130321894}
   - {fileID: 2855580816015555855}
   - {fileID: 2342127195990595218}
+  - {fileID: 1305743151215358526}
   - {fileID: -2494204764390822227}
   - {fileID: 2258460360609108240}
   - {fileID: 5757774882280749814}
@@ -1829,8 +1875,8 @@ MonoBehaviour:
   - {fileID: -726106441749035919}
   - {fileID: -7347847738589692593}
   - {fileID: -6881003004185211348}
-  customLoaderName: 
-  m_renderMode: 1
+  customLoaderName:
+  m_renderMode: 0
   m_latencyOptimization: 0
   m_autoColorSubmissionMode: 1
   m_colorSubmissionModes:

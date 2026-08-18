@@ -83,11 +83,10 @@ public class GlaucomaBlurFeature : ScriptableRendererFeature
                     // Get the native CommandBuffer from the unsafe context
                     CommandBuffer natCmd = CommandBufferHelpers.GetNativeCommandBuffer(ctx.cmd);
 
-                    // DEBUG: clear to green to confirm the pass is executing
-                    natCmd.SetRenderTarget(data.tempTex1);
-                    natCmd.ClearRenderTarget(true, true, Color.green);
-
-                    // Expose the texture globally so GlaucomaFieldGenerator shader can sample it
+                    // Expose the texture globally so GlaucomaFieldGenerator shader can sample it.
+                    // Never SetRenderTarget here: this runs inside an unsafe pass, and switching
+                    // the target without restoring it desyncs RenderGraph from the camera's real
+                    // color target, which silently blanks the camera output.
                     natCmd.SetGlobalTexture(data.globalBlurTexId, data.tempTex1);
                 });
             }
@@ -111,8 +110,6 @@ public class GlaucomaBlurFeature : ScriptableRendererFeature
 
             CommandBuffer cmd = CommandBufferPool.Get("GlaucomaBlurPass");
 
-            CoreUtils.SetRenderTarget(cmd, tempTexture1);
-            cmd.ClearRenderTarget(true, true, Color.green);
             cmd.SetGlobalTexture(globalBlurTexId, tempTexture1);
 
             context.ExecuteCommandBuffer(cmd);

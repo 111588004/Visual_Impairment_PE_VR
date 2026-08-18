@@ -76,3 +76,15 @@ crashlytics-build.properties
 find_recent_cs.py
 glaucoma_projection_diagram.png
 glaucoma_transition_modes.png
+diag_maincam.png
+
+# Unity crash-recovery scene backups (auto-generated on Editor crash)
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+
+# Rejected/disabled community OpenXR workaround (kept for reference, not part of the shipping project)
+/[Aa]ssets/_Core/Scripts/Common/OpenXR/
+/[Aa]ssets/_Core/Scripts/Common/OpenXR.meta
+
+# Claude Code local config
+/.claude/
