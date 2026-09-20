@@ -94,3 +94,6 @@ diag_maincam.png
 
 # Personal work log (not for the public repo)
 /PROJECT_LOG.md
+
+# Personal reference documents (copyrighted / third-party material, keep local)
+/docs/*.pdf

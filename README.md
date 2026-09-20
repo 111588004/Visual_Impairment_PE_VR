@@ -2,8 +2,12 @@
 
 <p align="center">VR/AR visual impairment simulation project built in Unity (URP). Simulates various visual impairment conditions in immersive scenarios for perception/accessibility research.</p>
 
+<p align="center">Accompanying paper: <em>Simulating residual vision in virtual reality: A perception-based accessibility evaluation framework</em> (ICASI 2026; proceedings forthcoming) — see <a href="#citation">Citation</a>.</p>
+
 <p align="center">
   <img src="docs/images/fig-hero-pcvr-headset-setup.png" alt="PCVR headset test setup" width="90%">
+  <br>
+  <sub><em>Illustrative photo: researchers demonstrating the setup (not study participants).</em></sub>
 </p>
 
 ## Demo video
@@ -68,7 +72,7 @@ VR environment/UI fixers ([`Assets/_Core/Scripts/Helpers`](Assets/_Core/Scripts/
 ### Cataract ([`VC1-VSCS/Cataract`](Assets/_Demo/VC1-VSCS/Cataract))
 
 - [`CataractVolumeControl.cs`](Assets/_Demo/VC1-VSCS/Cataract/CataractVolumeControl.cs) — drives the URP Volume (blur, contrast, yellowing) from a Snellen-acuity setting
-- [`PelliRobsonChart.cs`](Assets/_Demo/VC1-VSCS/Cataract/PelliRobsonChart.cs) — generates the in-scene Pelli-Robson contrast-sensitivity chart
+- [`PelliRobsonChart.cs`](Assets/_Demo/VC1-VSCS/Cataract/PelliRobsonChart.cs) — generates the in-scene Pelli-Robson contrast-sensitivity chart (after Pelli, Robson & Wilkins, 1988)
 
 <p align="center"><img src="docs/images/fig3.12_cataract-effects-before-after.svg" alt="Cataract's four effects composited, before/after" width="80%"></p>
 
@@ -94,9 +98,7 @@ Visual-field sensitivity function and eye-gaze alignment — the model behind `G
 
 Image-mask approach to restricting the visible field — what `GlaucomaRenderer.cs` / `GlaucomaBlurFeature.cs` / `GlaucomaOverlay.shader` render.
 
-<p align="center"><img src="docs/images/fig4.02_vision-contrast-charts-in-scene.svg" alt="Snellen and Pelli-Robson charts embedded in-scene" width="80%"></p>
-
-The Pelli-Robson chart doubles as the contrast-sensitivity calibration reference for the Glaucoma simulation too (see the Cataract section above for the full explanation).
+The Pelli-Robson chart doubles as the contrast-sensitivity calibration reference for the Glaucoma simulation too (see the figure and full explanation in the Cataract section above).
 
 ### Eye tracking ([`VC2-VF/Scripts`](Assets/_Demo/VC2-VF/Scripts), [`EyeTracking`](Assets/_Demo/EyeTracking))
 
@@ -147,3 +149,32 @@ PCVR (streamed via VIVE Business Streaming + SteamVR/OpenXR) is not supported �
 1. Install [Git LFS](https://git-lfs.com/) and run `git lfs install` before cloning.
 2. Clone this repository.
 3. Open the project with Unity Hub using editor version `6000.3.21f1`.
+
+## Citation
+
+This project accompanies the following conference paper, presented on 16 April 2026. The proceedings (IET) are scheduled for publication in October 2026; this section will be updated with the DOI and final citation details once available.
+
+> Lee, H.-Y., & Chen, C.-I. (2026, April 16). *Simulating residual vision in virtual reality: A perception-based accessibility evaluation framework*. Paper presented at the 2026 12th International Conference on Applied System Innovation (ICASI), Kyoto International Conference Center, Kyoto, Japan.
+
+```bibtex
+@inproceedings{lee2026residualvision,
+  author    = {Lee, H.-Y. and Chen, C.-I.},
+  title     = {Simulating residual vision in virtual reality: A perception-based accessibility evaluation framework},
+  booktitle = {2026 12th International Conference on Applied System Innovation (ICASI)},
+  address   = {Kyoto, Japan},
+  month     = apr,
+  year      = {2026},
+  publisher = {IET},
+  note      = {Proceedings forthcoming (expected October 2026)}
+}
+```
+
+## License
+
+The original source code in this repository is released under the [MIT License](LICENSE).
+
+Not covered by the MIT License:
+
+- **Third-party components** (e.g. TextMesh Pro, Unity packages, VIVE OpenXR) keep their own licenses. Third-party art asset packs used by the scenes are **not distributed** with this repository and must be obtained separately; without them, S1–S3 will be missing their environment objects.
+- **Figures, diagrams and photos** under `docs/images/` are © the authors, all rights reserved, until the accompanying paper is published.
+- The simulations are research approximations of visual impairment. They are not a medical device and must not be used for diagnosis.
