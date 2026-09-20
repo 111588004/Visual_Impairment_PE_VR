@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/images/logo.png" alt="Visual_Impairment_PE_VR logo" width="220">
-</p>
-
 <h1 align="center">Visual_Impairment_PE_VR</h1>
 
 <p align="center">VR/AR visual impairment simulation project built in Unity (URP). Simulates various visual impairment conditions in immersive scenarios for perception/accessibility research.</p>

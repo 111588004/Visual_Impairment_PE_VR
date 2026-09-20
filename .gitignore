@@ -89,5 +89,8 @@ diag_maincam.png
 # Claude Code local config
 /.claude/
 
-# Third-party paid/commercial asset packages (license prohibits redistribution)
+# Third-party commercial assets (license prohibits redistribution)
 /[Aa]ssets/_ThirdParty/
+
+# Personal work log (not for the public repo)
+/PROJECT_LOG.md
