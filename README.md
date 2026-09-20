@@ -6,6 +6,16 @@
   <img src="docs/images/fig-hero-pcvr-headset-setup.png" alt="PCVR headset test setup" width="90%">
 </p>
 
+## Demo video
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=r-3hTQyr6_w">
+    <img src="https://img.youtube.com/vi/r-3hTQyr6_w/hqdefault.jpg" alt="Virtual Reality Visual Impairments Simulation - Visual Condition & Environmental Parameters (YouTube)" width="60%">
+  </a>
+  <br>
+  <a href="https://www.youtube.com/watch?v=r-3hTQyr6_w">▶ Watch on YouTube</a>
+</p>
+
 ## Scenes
 
 - **S1 – Stairway Profile**: Stair navigation with contrast control
